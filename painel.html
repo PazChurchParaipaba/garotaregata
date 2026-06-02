@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Garota Regata</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header>
+            <img src="logo.png" alt="34ª Regata de Lagoinha" class="logo" style="max-width: 150px;">
+            <h1>Painel Administrativo</h1>
+            <p>Acompanhamento em tempo real da votação</p>
+        </header>
+
+        <div class="admin-dashboard">
+            <div class="stat-card">
+                <h3>Total de Votos</h3>
+                <p id="totalVotes" class="stat-number">0</p>
+            </div>
+
+            <div class="stat-card config-card" style="max-width: 350px;">
+                <h3>Encerramento da Votação</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                    <input type="datetime-local" id="dataEncerramentoInput" style="padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <button id="saveConfigBtn" class="submit-btn" style="padding: 10px; font-size: 0.95rem; margin-top: 0;">Salvar Data</button>
+                    <p id="configStatus" style="font-size: 0.85rem; color: #10b981; display: none;">Salvo com sucesso!</p>
+                </div>
+            </div>
+
+            <button id="refreshBtn" class="submit-btn" style="width: auto; margin: 0 auto; display: block; min-width: 250px;">Atualizar Resultados</button>
+        </div>
+
+        <div class="leaderboard-container">
+            <h2>Classificação Atual</h2>
+            <div id="loadingPanel" class="loading-message">Carregando dados...</div>
+            
+            <div class="table-responsive">
+                <table class="leaderboard-table hidden" id="leaderboardTable">
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Candidata</th>
+                            <th>Localidade</th>
+                            <th>Votos</th>
+                            <th>%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="leaderboard-container">
+            <h2>Dados das Inscrições</h2>
+            <div class="table-responsive">
+                <table class="leaderboard-table hidden" id="inscricoesTable">
+                    <thead>
+                        <tr>
+                            <th>Candidata / Foto</th>
+                            <th>Idade</th>
+                            <th>Contato</th>
+                            <th>Localidade</th>
+                            <th>Status (Autorização)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inscricoesBody">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="painel.js"></script>
+</body>
+</html>

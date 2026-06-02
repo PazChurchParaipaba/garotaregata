@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Garota Regata</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+    <div class="container">
+        <header>
+            <img src="logo.png" alt="34ª Regata de Lagoinha" class="logo">
+            <p>Faça seu cadastro para o Garota Regata 2026</p>
+        </header>
+
+        <form id="registrationForm">
+            <div class="input-group">
+                <label for="nome">Nome Completo <span class="asterisk">*</span></label>
+                <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
+            </div>
+
+            <div class="row">
+                <div class="input-group">
+                    <label for="idade">Idade <span class="asterisk">*</span></label>
+                    <input type="number" id="idade" name="idade" placeholder="Sua idade" min="0" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="contato">Número para Contato <span class="asterisk">*</span></label>
+                    <input type="tel" id="contato" name="contato" placeholder="(00) 00000-0000" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="localidade">Localidade (Cidade/Bairro) <span class="asterisk">*</span></label>
+                <input type="text" id="localidade" name="localidade" placeholder="Onde você mora?" required>
+            </div>
+
+            <div class="input-group">
+                <label for="fotos">Fotos da Candidata <span class="asterisk">*</span></label>
+                <div class="file-upload">
+                    <input type="file" id="fotos" name="fotos" accept="image/*" multiple required>
+                    <p class="file-info" id="fotos-info">Faça o upload de uma ou mais fotos com boa qualidade.</p>
+                </div>
+            </div>
+
+            <div class="input-group hidden" id="authGroup">
+                <label for="autorizacao">Autorização dos Pais <span class="asterisk">*</span></label>
+                <div class="file-upload">
+                    <input type="file" id="autorizacao" name="autorizacao" accept="image/*,.pdf">
+                    <p class="file-info">Faça o upload do documento de autorização assinado.</p>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Realizar Cadastro</button>
+        </form>
+    </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votação - Garota Regata</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="voting-container">
+        <header>
+            <img src="logo.png" alt="34ª Regata de Lagoinha" class="logo">
+            <h1>Votação Oficial</h1>
+            <p>Escolha sua candidata favorita para o Garota Regata 2026</p>
+        </header>
+
+        <div id="loadingMessage" class="loading-message">Carregando candidatas...</div>
+        <div id="errorMessage" class="error-message hidden">Erro ao carregar candidatas. Tente novamente mais tarde.</div>
+
+        <div id="candidatesGrid" class="candidates-grid hidden">
+            <!-- Candidatas serão inseridas aqui via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Voto -->
+    <div id="voteModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Confirmar Voto</h2>
+            <p>Deseja confirmar seu voto em <strong id="modalCandidateName"></strong>?</p>
+            <div class="modal-actions">
+                <button id="cancelVoteBtn" class="cancel-btn">Cancelar</button>
+                <button id="confirmVoteBtn" class="submit-btn">Confirmar Voto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso/Erro -->
+    <div id="resultModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMessage"></p>
+            <button id="closeResultBtn" class="submit-btn" style="margin-top: 20px;">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FingerprintJS -->
+    <script>
+      const fpPromise = import('https://openfpcdn.io/fingerprintjs/v4')
+        .then(FingerprintJS => FingerprintJS.load())
+    </script>
+    <script src="votacao.js"></script>
+</body>
+
+</html>
