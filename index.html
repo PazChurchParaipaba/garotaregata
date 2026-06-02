@@ -46,10 +46,10 @@
             </div>
 
             <div class="input-group">
-                <label for="video_apresentacao">Vídeo de Apresentação <span class="asterisk">*</span></label>
+                <label for="video_apresentacao">Vídeo de Apresentação (Máx: 1 minuto) <span class="asterisk">*</span></label>
                 <div class="file-upload">
                     <input type="file" id="video_apresentacao" name="video_apresentacao" accept="video/*" required>
-                    <p class="file-info" id="video-info">Faça o upload de um vídeo curto de apresentação.</p>
+                    <p class="file-info" id="video-info">Faça o upload de um vídeo seu de no máximo 1 minuto se apresentando.</p>
                 </div>
             </div>
 
@@ -62,12 +62,10 @@
                 </select>
             </div>
 
-            <div class="input-group hidden" id="parentescoGroup">
-                <label for="comprovante_parentesco">Comprovante de Parentesco (Pessoas de Paraipaba) <span class="asterisk">*</span></label>
-                <div class="file-upload">
-                    <input type="file" id="comprovante_parentesco" name="comprovante_parentesco" accept="image/*,.pdf">
-                    <p class="file-info" id="parentesco-info">Faça o upload de um documento ou foto comprovando o parentesco.</p>
-                </div>
+            <div class="input-group hidden" id="alertaParentesco" style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <p style="color: var(--text-main); font-size: 0.95rem; margin: 0; line-height: 1.5;">
+                    <strong style="color: #f59e0b;">⚠️ Atenção:</strong> Como você não mora em Paraipaba, é <strong>OBRIGATÓRIO</strong> que no seu vídeo de 1 minuto você explique detalhadamente quem é a sua família (grau de parentesco e nomes) que reside em Paraipaba.
+                </p>
             </div>
 
             <div class="input-group">
@@ -84,6 +82,13 @@
                     <input type="file" id="autorizacao" name="autorizacao" accept="image/*,.pdf">
                     <p class="file-info">Faça o upload do documento de autorização assinado.</p>
                 </div>
+            </div>
+
+            <div class="input-group checkbox-group" style="margin-top: 15px; margin-bottom: 25px;">
+                <label style="display: flex; gap: 12px; align-items: flex-start; font-weight: 400; font-size: 0.95rem; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="aceite_regras" name="aceite_regras" required style="margin-top: 5px; cursor: pointer; width: 18px; height: 18px; flex-shrink: 0;">
+                    <span>Declaro que li e concordo com os termos. Estou ciente de que serei <strong>automaticamente eliminada</strong> do Garota Regata caso o vídeo não contenha as especificações exigidas ou eu não comprove as regras de parentesco.</span>
+                </label>
             </div>
 
             <button type="submit" class="submit-btn">Realizar Cadastro</button>

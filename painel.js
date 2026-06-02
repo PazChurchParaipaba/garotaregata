@@ -153,13 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let parentescoStatus = '';
                 if (c.mora_paraipaba === 'nao') {
-                    if (c.comprovante_parentesco_url) {
-                        parentescoStatus = `<a href="${c.comprovante_parentesco_url}" target="_blank" style="color: #f59e0b; text-decoration: none; font-size: 0.8rem;">📄 Comprovante</a>`;
-                    } else {
-                        parentescoStatus = `<span style="color: var(--error); font-size: 0.8rem;">Pendente</span>`;
-                    }
+                    parentescoStatus = `<span style="color: #f59e0b; font-size: 0.85rem; font-weight: bold;">Não (Checar Vídeo)</span>`;
                 } else {
-                    parentescoStatus = `<span style="color: var(--text-muted); font-size: 0.8rem;">De Paraipaba</span>`;
+                    parentescoStatus = `<span style="color: var(--text-muted); font-size: 0.85rem;">Sim</span>`;
                 }
 
                 // Vídeos e Apresentação
