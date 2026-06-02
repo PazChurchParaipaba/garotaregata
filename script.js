@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const fotosInfo = document.getElementById('fotos-info');
     const authInfo = authGroup.querySelector('.file-info');
 
+    const videoInput = document.getElementById('video_apresentacao');
+    const videoInfo = document.getElementById('video-info');
+    const moraParaipabaSelect = document.getElementById('mora_paraipaba');
+    const parentescoGroup = document.getElementById('parentescoGroup');
+    const parentescoInput = document.getElementById('comprovante_parentesco');
+    const parentescoInfo = document.getElementById('parentesco-info');
+
     // Update text when files are selected
     fotosInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
@@ -33,6 +40,45 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             authInfo.textContent = 'Faça o upload do documento de autorização assinado.';
             authInfo.style.color = 'var(--primary)';
+        }
+    });
+
+    videoInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            videoInfo.textContent = e.target.files[0].name;
+            videoInfo.style.color = 'var(--text-main)';
+        } else {
+            videoInfo.textContent = 'Faça o upload de um vídeo curto de apresentação.';
+            videoInfo.style.color = 'var(--primary)';
+        }
+    });
+
+    parentescoInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            parentescoInfo.textContent = e.target.files[0].name;
+            parentescoInfo.style.color = 'var(--text-main)';
+        } else {
+            parentescoInfo.textContent = 'Faça o upload de um documento ou foto comprovando o parentesco.';
+            parentescoInfo.style.color = 'var(--primary)';
+        }
+    });
+
+    moraParaipabaSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'nao') {
+            parentescoGroup.classList.remove('hidden');
+            parentescoGroup.classList.add('visible');
+            parentescoInput.setAttribute('required', 'true');
+        } else {
+            parentescoGroup.classList.remove('visible');
+            setTimeout(() => {
+                if (moraParaipabaSelect.value !== 'nao') {
+                    parentescoGroup.classList.add('hidden');
+                }
+            }, 300);
+            parentescoInput.removeAttribute('required');
+            parentescoInput.value = '';
+            parentescoInfo.textContent = 'Faça o upload de um documento ou foto comprovando o parentesco.';
+            parentescoInfo.style.color = 'var(--primary)';
         }
     });
 
@@ -73,11 +119,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const idade = formData.get('idade');
             const contato = formData.get('contato');
             const localidade = formData.get('localidade');
+            const texto_apresentacao = formData.get('texto_apresentacao');
+            const mora_paraipaba = formData.get('mora_paraipaba');
             const fotoFiles = formData.getAll('fotos');
             const authFile = formData.get('autorizacao');
+            const videoFile = formData.get('video_apresentacao');
+            const parentescoFile = formData.get('comprovante_parentesco');
 
             let fotosUrls = [];
             let autorizacaoUrl = null;
+            let videoUrl = null;
+            let parentescoUrl = null;
 
             // 1. Upload Multiple Fotos
             if (fotoFiles && fotoFiles.length > 0) {
@@ -119,6 +171,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 autorizacaoUrl = publicUrlData.publicUrl;
             }
 
+            // Upload Video
+            if (videoFile && videoFile.size > 0) {
+                const fileExt = videoFile.name.split('.').pop();
+                const fileName = `${Date.now()}_video_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const { data, error } = await supabaseClient.storage
+                    .from('garota_regata_media')
+                    .upload(`videos/${fileName}`, videoFile);
+
+                if (error) throw error;
+                
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('garota_regata_media')
+                    .getPublicUrl(`videos/${fileName}`);
+                
+                videoUrl = publicUrlData.publicUrl;
+            }
+
+            // Upload Parentesco
+            if (parentescoFile && parentescoFile.size > 0) {
+                const fileExt = parentescoFile.name.split('.').pop();
+                const fileName = `${Date.now()}_parentesco_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const { data, error } = await supabaseClient.storage
+                    .from('garota_regata_media')
+                    .upload(`parentesco/${fileName}`, parentescoFile);
+
+                if (error) throw error;
+                
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('garota_regata_media')
+                    .getPublicUrl(`parentesco/${fileName}`);
+                
+                parentescoUrl = publicUrlData.publicUrl;
+            }
+
             // 3. Insert Database Record
             const { error: insertError } = await supabaseClient
                 .from('candidatas')
@@ -128,6 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         idade: parseInt(idade),
                         contato,
                         localidade,
+                        texto_apresentacao,
+                        video_url: videoUrl,
+                        mora_paraipaba: mora_paraipaba,
+                        comprovante_parentesco_url: parentescoUrl,
                         fotos_urls: fotosUrls,
                         autorizacao_url: autorizacaoUrl
                     }
@@ -146,6 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 fotosInfo.style.color = 'var(--primary)';
                 authInfo.textContent = 'Faça o upload do documento de autorização assinado.';
                 authInfo.style.color = 'var(--primary)';
+                videoInfo.textContent = 'Faça o upload de um vídeo curto de apresentação.';
+                videoInfo.style.color = 'var(--primary)';
+                parentescoInfo.textContent = 'Faça o upload de um documento ou foto comprovando o parentesco.';
+                parentescoInfo.style.color = 'var(--primary)';
                 
                 btn.textContent = originalText;
                 btn.style.background = '';

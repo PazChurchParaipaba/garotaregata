@@ -41,6 +41,36 @@
             </div>
 
             <div class="input-group">
+                <label for="texto_apresentacao">Texto Curto de Apresentação <span class="asterisk">*</span></label>
+                <textarea id="texto_apresentacao" name="texto_apresentacao" placeholder="Fale um pouco sobre você..." rows="3" required></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="video_apresentacao">Vídeo de Apresentação <span class="asterisk">*</span></label>
+                <div class="file-upload">
+                    <input type="file" id="video_apresentacao" name="video_apresentacao" accept="video/*" required>
+                    <p class="file-info" id="video-info">Faça o upload de um vídeo curto de apresentação.</p>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="mora_paraipaba">Você reside em Paraipaba? <span class="asterisk">*</span></label>
+                <select id="mora_paraipaba" name="mora_paraipaba" required>
+                    <option value="" disabled selected>Selecione uma opção</option>
+                    <option value="sim">Sim, moro em Paraipaba</option>
+                    <option value="nao">Não, moro em outra cidade</option>
+                </select>
+            </div>
+
+            <div class="input-group hidden" id="parentescoGroup">
+                <label for="comprovante_parentesco">Comprovante de Parentesco (Pessoas de Paraipaba) <span class="asterisk">*</span></label>
+                <div class="file-upload">
+                    <input type="file" id="comprovante_parentesco" name="comprovante_parentesco" accept="image/*,.pdf">
+                    <p class="file-info" id="parentesco-info">Faça o upload de um documento ou foto comprovando o parentesco.</p>
+                </div>
+            </div>
+
+            <div class="input-group">
                 <label for="fotos">Fotos da Candidata <span class="asterisk">*</span></label>
                 <div class="file-upload">
                     <input type="file" id="fotos" name="fotos" accept="image/*" multiple required>

@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Buscar todas as candidatas (com dados completos)
             const { data: candidatas, error: candidatasError } = await supabaseClient
                 .from('candidatas')
-                .select('id, nome, localidade, fotos_urls, idade, contato, autorizacao_url');
+                .select('id, nome, localidade, fotos_urls, idade, contato, autorizacao_url, texto_apresentacao, video_url, mora_paraipaba, comprovante_parentesco_url');
 
             if (candidatasError) throw candidatasError;
 
@@ -126,11 +126,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 leaderboardBody.appendChild(tr);
             });
 
-            // Renderizar tabela de Inscrições (Dados Completos)
+            // Renderizar tabela de Inscrições (Dados Completos) e Vídeos
             const inscricoesBody = document.getElementById('inscricoesBody');
             const inscricoesTable = document.getElementById('inscricoesTable');
+            const videosGrid = document.getElementById('videosGrid');
             
             inscricoesBody.innerHTML = '';
+            videosGrid.innerHTML = '';
             // Ordenar por nome
             const candidatasOrdenadas = [...candidatas].sort((a, b) => a.nome.localeCompare(b.nome));
             
@@ -149,6 +151,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     authStatus = `<span style="color: var(--text-muted);">Maior de Idade</span>`;
                 }
 
+                let parentescoStatus = '';
+                if (c.mora_paraipaba === 'nao') {
+                    if (c.comprovante_parentesco_url) {
+                        parentescoStatus = `<a href="${c.comprovante_parentesco_url}" target="_blank" style="color: #f59e0b; text-decoration: none; font-size: 0.8rem;">📄 Comprovante</a>`;
+                    } else {
+                        parentescoStatus = `<span style="color: var(--error); font-size: 0.8rem;">Pendente</span>`;
+                    }
+                } else {
+                    parentescoStatus = `<span style="color: var(--text-muted); font-size: 0.8rem;">De Paraipaba</span>`;
+                }
+
+                // Vídeos e Apresentação
+                if (c.video_url || c.texto_apresentacao) {
+                    const videoCard = document.createElement('div');
+                    videoCard.style = "background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 10px;";
+                    
+                    let videoHtml = c.video_url ? `
+                        <video controls style="width: 100%; border-radius: 8px; background: #000; max-height: 250px;">
+                            <source src="${c.video_url}" type="video/mp4">
+                            Seu navegador não suporta vídeos.
+                        </video>` : '<div style="background: var(--body-bg); padding: 20px; text-align: center; border-radius: 8px; font-size: 0.9rem; color: var(--text-muted);">Sem vídeo</div>';
+                    
+                    videoCard.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <img src="${fotoUrl}" alt="Foto de ${c.nome}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
+                            <h4 style="margin: 0; color: var(--text-main); font-size: 1rem;">${c.nome}</h4>
+                        </div>
+                        ${videoHtml}
+                        ${c.texto_apresentacao ? `<p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4; padding-top: 5px; border-top: 1px solid var(--card-border);">"${c.texto_apresentacao}"</p>` : ''}
+                    `;
+                    videosGrid.appendChild(videoCard);
+                }
+
                 tr.innerHTML = `
                     <td>
                         <div class="candidata-col">
@@ -159,8 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </td>
                     <td style="font-weight: bold; color: ${c.idade < 18 ? 'var(--primary)' : 'inherit'};">${c.idade}</td>
-                    <td><a href="https://wa.me/55${c.contato.replace(/\\D/g, '')}" target="_blank" style="color: var(--text-main); text-decoration: none;">${c.contato}</a></td>
+                    <td><a href="https://wa.me/55${c.contato.replace(/\D/g, '')}" target="_blank" style="color: var(--text-main); text-decoration: none;">${c.contato}</a></td>
                     <td>${c.localidade}</td>
+                    <td>${parentescoStatus}</td>
                     <td>${authStatus}</td>
                 `;
                 inscricoesBody.appendChild(tr);
