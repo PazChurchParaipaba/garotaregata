@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Buscar todas as candidatas (com dados completos)
             const { data: candidatas, error: candidatasError } = await supabaseClient
                 .from('candidatas')
-                .select('id, nome, localidade, fotos_urls, idade, contato, autorizacao_url, texto_apresentacao, video_url, mora_paraipaba, comprovante_parentesco_url');
+                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, texto_apresentacao, video_url, mora_paraipaba');
 
             if (candidatasError) throw candidatasError;
 
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Vídeos e Apresentação
-                if (c.video_url || c.texto_apresentacao) {
+                if (c.video_url || c.texto_apresentacao || (c.idade < 18 && c.autorizacao_url)) {
                     const videoCard = document.createElement('div');
                     videoCard.style = "background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 10px;";
                     
@@ -169,6 +169,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             Seu navegador não suporta vídeos.
                         </video>` : '<div style="background: var(--body-bg); padding: 20px; text-align: center; border-radius: 8px; font-size: 0.9rem; color: var(--text-muted);">Sem vídeo</div>';
                     
+                    let authHtml = '';
+                    if (c.idade < 18 && c.autorizacao_url) {
+                        authHtml = `
+                            <div style="margin-top: 5px; padding-top: 10px; border-top: 1px solid var(--card-border);">
+                                <span style="display: block; font-size: 0.8rem; font-weight: bold; color: #10b981; margin-bottom: 5px;">Autorização Escrita (Menor de Idade):</span>
+                                <a href="${c.autorizacao_url}" target="_blank" title="Clique para ampliar">
+                                    <img src="${c.autorizacao_url}" alt="Autorização" style="width: 100%; border-radius: 4px; max-height: 120px; object-fit: cover; border: 1px solid #10b981;">
+                                </a>
+                            </div>
+                        `;
+                    }
+
                     videoCard.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                             <img src="${fotoUrl}" alt="Foto de ${c.nome}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
@@ -176,6 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         ${videoHtml}
                         ${c.texto_apresentacao ? `<p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4; padding-top: 5px; border-top: 1px solid var(--card-border);">"${c.texto_apresentacao}"</p>` : ''}
+                        ${authHtml}
                     `;
                     videosGrid.appendChild(videoCard);
                 }
@@ -189,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <strong>${c.nome}</strong>
                         </div>
                     </td>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">${c.cpf || '-'}</td>
                     <td style="font-weight: bold; color: ${c.idade < 18 ? 'var(--primary)' : 'inherit'};">${c.idade}</td>
                     <td><a href="https://wa.me/55${c.contato.replace(/\D/g, '')}" target="_blank" style="color: var(--text-main); text-decoration: none;">${c.contato}</a></td>
                     <td>${c.localidade}</td>

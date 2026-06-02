@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const formData = new FormData(form);
             const nome = formData.get('nome');
+            const cpf = formData.get('cpf');
             const idade = formData.get('idade');
             const contato = formData.get('contato');
             const localidade = formData.get('localidade');
@@ -175,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .insert([
                     {
                         nome,
+                        cpf,
                         idade: parseInt(idade),
                         contato,
                         localidade,
@@ -221,8 +223,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Simple phone mask
     const contatoInput = document.getElementById('contato');
-    contatoInput.addEventListener('input', function (e) {
-        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
-        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-    });
+    if (contatoInput) {
+        contatoInput.addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    }
+
+    // Simple CPF mask
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            if (value.length > 9) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+            }
+            e.target.value = value;
+        });
+    }
 });

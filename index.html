@@ -23,6 +23,11 @@
                 <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
             </div>
 
+            <div class="input-group">
+                <label for="cpf">CPF <span class="asterisk">*</span></label>
+                <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" required maxlength="14">
+            </div>
+
             <div class="row">
                 <div class="input-group">
                     <label for="idade">Idade <span class="asterisk">*</span></label>
@@ -76,11 +81,12 @@
                 </div>
             </div>
 
-            <div class="input-group hidden" id="authGroup">
-                <label for="autorizacao">Autorização dos Pais <span class="asterisk">*</span></label>
+            <div class="input-group hidden" id="authGroup" style="background-color: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <label for="autorizacao">Autorização dos Pais (Escrita à Mão) <span class="asterisk">*</span></label>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Escreva em um papel: <em>"Eu, [Nome do Responsável], autorizo minha filha [Nome da Candidata] a participar do concurso Garota Regata."</em> Assine e tire uma foto nítida.</p>
                 <div class="file-upload">
-                    <input type="file" id="autorizacao" name="autorizacao" accept="image/*,.pdf">
-                    <p class="file-info">Faça o upload do documento de autorização assinado.</p>
+                    <input type="file" id="autorizacao" name="autorizacao" accept="image/*" required>
+                    <p class="file-info">Faça o upload da foto da autorização escrita à mão.</p>
                 </div>
             </div>
 
