@@ -7,6 +7,7 @@
     <title>Cadastro - Garota Regata</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logoregata.png">
 </head>
 
 <body>
@@ -45,10 +46,6 @@
                 <input type="text" id="localidade" name="localidade" placeholder="Onde você mora?" required>
             </div>
 
-            <div class="input-group">
-                <label for="texto_apresentacao">Texto Curto de Apresentação <span class="asterisk">*</span></label>
-                <textarea id="texto_apresentacao" name="texto_apresentacao" placeholder="Fale um pouco sobre você..." rows="3" required></textarea>
-            </div>
 
             <div class="input-group">
                 <label for="video_apresentacao">Vídeo de Apresentação (Máx: 1 minuto) <span class="asterisk">*</span></label>
@@ -85,7 +82,7 @@
                 <label for="autorizacao">Autorização dos Pais (Escrita à Mão) <span class="asterisk">*</span></label>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Escreva em um papel: <em>"Eu, [Nome do Responsável], autorizo minha filha [Nome da Candidata] a participar do concurso Garota Regata."</em> Assine e tire uma foto nítida.</p>
                 <div class="file-upload">
-                    <input type="file" id="autorizacao" name="autorizacao" accept="image/*" required>
+                    <input type="file" id="autorizacao" name="autorizacao" accept="image/*">
                     <p class="file-info">Faça o upload da foto da autorização escrita à mão.</p>
                 </div>
             </div>
@@ -93,7 +90,7 @@
             <div class="input-group checkbox-group" style="margin-top: 15px; margin-bottom: 25px;">
                 <label style="display: flex; gap: 12px; align-items: flex-start; font-weight: 400; font-size: 0.95rem; cursor: pointer; color: var(--text-main);">
                     <input type="checkbox" id="aceite_regras" name="aceite_regras" required style="margin-top: 5px; cursor: pointer; width: 18px; height: 18px; flex-shrink: 0;">
-                    <span>Declaro que li e concordo com os termos. Estou ciente de que serei <strong>automaticamente eliminada</strong> do Garota Regata caso o vídeo não contenha as especificações exigidas ou eu não comprove as regras de parentesco.</span>
+                    <span>Declaro que li e estou de acordo com todos os termos estabelecidos. Estou ciente de que o não cumprimento de qualquer requisito, incluindo os critérios de residência e/ou parentesco previstos no regulamento, implicará em minha desclassificação automática do concurso.</span>
                 </label>
             </div>
 

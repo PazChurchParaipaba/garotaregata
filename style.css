@@ -57,7 +57,8 @@ header {
 }
 
 .logo {
-    max-width: 100%;
+    max-width: 220px;
+    width: 100%;
     height: auto;
     margin-bottom: 15px;
     border-radius: 12px;

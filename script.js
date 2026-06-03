@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const idade = formData.get('idade');
             const contato = formData.get('contato');
             const localidade = formData.get('localidade');
-            const texto_apresentacao = formData.get('texto_apresentacao');
+
             const mora_paraipaba = formData.get('mora_paraipaba');
             const fotoFiles = formData.getAll('fotos');
             const authFile = formData.get('autorizacao');
@@ -123,7 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const { data, error } = await supabaseClient.storage
                             .from('garota_regata_media')
-                            .upload(`fotos/${fileName}`, fotoFile);
+                            .upload(`fotos/${fileName}`, fotoFile, {
+                                contentType: fotoFile.type
+                            });
 
                         if (error) throw error;
                         
@@ -142,7 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fileName = `${Date.now()}_auth_${Math.random().toString(36).substring(7)}.${fileExt}`;
                 const { data, error } = await supabaseClient.storage
                     .from('garota_regata_media')
-                    .upload(`autorizacoes/${fileName}`, authFile);
+                    .upload(`autorizacoes/${fileName}`, authFile, {
+                        contentType: authFile.type
+                    });
 
                 if (error) throw error;
                 
@@ -155,11 +159,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Upload Video
             if (videoFile && videoFile.size > 0) {
+                if (videoFile.size > 250 * 1024 * 1024) { // 250MB
+                    throw new Error("O vídeo excede o tamanho máximo permitido de 250MB.");
+                }
                 const fileExt = videoFile.name.split('.').pop();
                 const fileName = `${Date.now()}_video_${Math.random().toString(36).substring(7)}.${fileExt}`;
                 const { data, error } = await supabaseClient.storage
                     .from('garota_regata_media')
-                    .upload(`videos/${fileName}`, videoFile);
+                    .upload(`videos/${fileName}`, videoFile, {
+                        contentType: videoFile.type
+                    });
 
                 if (error) throw error;
                 
@@ -180,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         idade: parseInt(idade),
                         contato,
                         localidade,
-                        texto_apresentacao,
+
                         video_url: videoUrl,
                         mora_paraipaba: mora_paraipaba,
                         fotos_urls: fotosUrls,
@@ -215,7 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error submitting form:', error);
-            alert('Erro ao realizar o cadastro. Por favor, tente novamente.');
+            const errorMsg = error.message ? error.message : 'Erro desconhecido.';
+            alert(`Erro ao realizar o cadastro: ${errorMsg}\nPor favor, tente novamente.`);
             btn.textContent = originalText;
             btn.disabled = false;
         }

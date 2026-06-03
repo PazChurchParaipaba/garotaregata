@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Buscar todas as candidatas (com dados completos)
             const { data: candidatas, error: candidatasError } = await supabaseClient
                 .from('candidatas')
-                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, texto_apresentacao, video_url, mora_paraipaba');
+                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, video_url, mora_paraipaba');
 
             if (candidatasError) throw candidatasError;
 
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Vídeos e Apresentação
-                if (c.video_url || c.texto_apresentacao || (c.idade < 18 && c.autorizacao_url)) {
+                if (c.video_url || (c.idade < 18 && c.autorizacao_url)) {
                     const videoCard = document.createElement('div');
                     videoCard.style = "background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 10px;";
                     
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <h4 style="margin: 0; color: var(--text-main); font-size: 1rem;">${c.nome}</h4>
                         </div>
                         ${videoHtml}
-                        ${c.texto_apresentacao ? `<p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4; padding-top: 5px; border-top: 1px solid var(--card-border);">"${c.texto_apresentacao}"</p>` : ''}
+
                         ${authHtml}
                     `;
                     videosGrid.appendChild(videoCard);
