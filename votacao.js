@@ -83,9 +83,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (data && data.length > 0) {
                 renderCandidates(data);
                 candidatesGrid.classList.remove('hidden');
+                errorMessage.classList.add('hidden'); // Ocultar erro se houver candidatas
             } else {
                 errorMessage.textContent = 'Nenhuma candidata cadastrada ainda.';
                 errorMessage.classList.remove('hidden');
+                candidatesGrid.classList.add('hidden'); // Ocultar grid se não houver candidatas
             }
 
         } catch (error) {
