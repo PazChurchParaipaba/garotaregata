@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 1. Upload Multiple Fotos
             if (fotoFiles && fotoFiles.length > 0) {
+                btn.textContent = 'Enviando fotos...';
                 for (let i = 0; i < fotoFiles.length; i++) {
                     const fotoFile = fotoFiles[i];
                     if (fotoFile.size > 0) {
@@ -140,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. Upload Autorização if underage
             if (authFile && authFile.size > 0) {
+                btn.textContent = 'Enviando autorização...';
                 const fileExt = authFile.name.split('.').pop();
                 const fileName = `${Date.now()}_auth_${Math.random().toString(36).substring(7)}.${fileExt}`;
                 const { data, error } = await supabaseClient.storage
@@ -159,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Upload Video
             if (videoFile && videoFile.size > 0) {
+                btn.textContent = 'Enviando vídeo (isso pode demorar alguns minutos)...';
                 if (videoFile.size > 250 * 1024 * 1024) { // 250MB
                     throw new Error("O vídeo excede o tamanho máximo permitido de 250MB.");
                 }
@@ -180,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 3. Insert Database Record
+            btn.textContent = 'Finalizando cadastro...';
             const { error: insertError } = await supabaseClient
                 .from('candidatas')
                 .insert([
