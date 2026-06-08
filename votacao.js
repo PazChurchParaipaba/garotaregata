@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { data, error } = await supabaseClient
                 .from('candidatas')
                 .select('*')
+                .eq('aprovada', true)
                 .order('nome', { ascending: true });
 
             if (error) throw error;

@@ -11,6 +11,7 @@ CREATE TABLE public.candidatas (
     fotos_urls TEXT[] NOT NULL,
     autorizacao_url TEXT,
     votos INTEGER DEFAULT 0,
+    aprovada BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

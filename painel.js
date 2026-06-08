@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Buscar todas as candidatas (com dados completos)
             const { data: candidatas, error: candidatasError } = await supabaseClient
                 .from('candidatas')
-                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, video_url, mora_paraipaba');
+                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, video_url, mora_paraipaba, aprovada');
 
             if (candidatasError) throw candidatasError;
 
@@ -193,6 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     videosGrid.appendChild(videoCard);
                 }
 
+                let aprovarBtnHtml = c.aprovada 
+                    ? `<button class="btn-aprovar" style="background: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" data-id="${c.id}" data-action="desaprovar">Aprovada ✓</button>`
+                    : `<button class="btn-aprovar" style="background: var(--primary); color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" data-id="${c.id}" data-action="aprovar">Aprovar</button>`;
+
                 tr.innerHTML = `
                     <td>
                         <div class="candidata-col">
@@ -208,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${c.localidade}</td>
                     <td>${parentescoStatus}</td>
                     <td>${authStatus}</td>
+                    <td>${aprovarBtnHtml}</td>
                 `;
                 inscricoesBody.appendChild(tr);
             });
@@ -226,6 +231,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     refreshBtn.addEventListener('click', loadResults);
+
+    // Event listener for Aprovação
+    document.getElementById('inscricoesBody').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('btn-aprovar')) {
+            const btn = e.target;
+            const id = btn.getAttribute('data-id');
+            const action = btn.getAttribute('data-action');
+            const isAprovando = action === 'aprovar';
+            
+            btn.disabled = true;
+            btn.textContent = 'Processando...';
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('candidatas')
+                    .update({ aprovada: isAprovando })
+                    .eq('id', id);
+                    
+                if (error) throw error;
+                
+                if (isAprovando) {
+                    btn.style.background = '#10b981';
+                    btn.textContent = 'Aprovada ✓';
+                    btn.setAttribute('data-action', 'desaprovar');
+                } else {
+                    btn.style.background = 'var(--primary)';
+                    btn.textContent = 'Aprovar';
+                    btn.setAttribute('data-action', 'aprovar');
+                }
+            } catch (err) {
+                console.error('Erro ao atualizar status:', err);
+                alert('Erro ao atualizar. Verifique se a coluna "aprovada" existe no banco de dados Supabase.');
+                btn.textContent = isAprovando ? 'Aprovar' : 'Aprovada ✓';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    });
 
     // Configurar atualização em tempo real (Realtime do Supabase)
     supabaseClient
