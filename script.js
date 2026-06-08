@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             videoInfo.textContent = e.target.files[0].name;
             videoInfo.style.color = 'var(--text-main)';
         } else {
-            videoInfo.textContent = 'Faça o upload de um vídeo seu de no máximo 1 minuto. Atenção: O tamanho máximo é de 150MB.';
+            videoInfo.textContent = 'Faça o upload de um vídeo seu de no máximo 1 minuto. Atenção: O tamanho máximo é de 200MB.';
             videoInfo.style.color = 'var(--primary)';
         }
     });
@@ -162,8 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Upload Video
             if (videoFile && videoFile.size > 0) {
                 btn.textContent = 'Enviando vídeo (isso pode demorar alguns minutos)...';
-                if (videoFile.size > 150 * 1024 * 1024) { // 150MB
-                    throw new Error("O vídeo excede o tamanho máximo permitido de 150MB. Por favor, diminua a qualidade da gravação e tente novamente.");
+                if (videoFile.size > 200 * 1024 * 1024) { // 200MB
+                    throw new Error("O vídeo excede o tamanho máximo permitido de 200MB. Por favor, diminua a qualidade da gravação e tente novamente.");
                 }
                 const fileExt = videoFile.name.split('.').pop();
                 const fileName = `${Date.now()}_video_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fotosInfo.style.color = 'var(--primary)';
                 authInfo.textContent = 'Faça o upload do documento de autorização assinado.';
                 authInfo.style.color = 'var(--primary)';
-                videoInfo.textContent = 'Faça o upload de um vídeo seu de no máximo 1 minuto. Atenção: O tamanho máximo é de 150MB.';
+                videoInfo.textContent = 'Faça o upload de um vídeo seu de no máximo 1 minuto. Atenção: O tamanho máximo é de 200MB.';
                 videoInfo.style.color = 'var(--primary)';
                 
                 btn.textContent = originalText;
