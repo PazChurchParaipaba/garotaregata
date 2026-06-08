@@ -45,3 +45,6 @@ CREATE POLICY "Allow public uploads" ON storage.objects
 DROP POLICY IF EXISTS "Allow public reads" ON storage.objects;
 CREATE POLICY "Allow public reads" ON storage.objects
     FOR SELECT USING (bucket_id = 'garota_regata_media');
+
+-- Enable Realtime for the candidatas table
+ALTER PUBLICATION supabase_realtime ADD TABLE public.candidatas;

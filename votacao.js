@@ -216,5 +216,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         confirmVoteBtn.disabled = false;
     }
 
+    // Configurar atualização em tempo real (Realtime do Supabase)
+    supabaseClient
+        .channel('candidatas_realtime')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'candidatas' }, (payload) => {
+            console.log('Status da candidata alterado!', payload);
+            // Recarrega a lista para adicionar ou remover candidatas baseadas na aprovação
+            loadCandidates();
+        })
+        .subscribe();
+
     loadCandidates();
 });
