@@ -244,12 +244,16 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Processando...';
             
             try {
-                const { error } = await supabaseClient
+                const { data, error } = await supabaseClient
                     .from('candidatas')
                     .update({ aprovada: isAprovando })
-                    .eq('id', id);
+                    .eq('id', id)
+                    .select();
                     
                 if (error) throw error;
+                if (!data || data.length === 0) {
+                    throw new Error("Permissão negada (RLS). Você precisa adicionar a política de UPDATE no Supabase.");
+                }
                 
                 if (isAprovando) {
                     btn.style.background = '#10b981';
@@ -262,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 console.error('Erro ao atualizar status:', err);
-                alert('Erro ao atualizar. Verifique se a coluna "aprovada" existe no banco de dados Supabase.');
+                alert('Erro ao atualizar: ' + (err.message || 'Verifique se a coluna "aprovada" existe e se há política de UPDATE.'));
                 btn.textContent = isAprovando ? 'Aprovar' : 'Aprovada ✓';
             } finally {
                 btn.disabled = false;

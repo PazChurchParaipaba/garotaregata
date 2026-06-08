@@ -26,6 +26,10 @@ CREATE POLICY "Allow public insert" ON public.candidatas
 CREATE POLICY "Allow public read" ON public.candidatas
     FOR SELECT USING (true);
 
+-- Allow anyone to update (needed for the admin panel)
+CREATE POLICY "Allow public update" ON public.candidatas
+    FOR UPDATE USING (true);
+
 
 -- Create the storage bucket for media (if it doesn't exist)
 INSERT INTO storage.buckets (id, name, public) 
