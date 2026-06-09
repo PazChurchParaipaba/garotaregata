@@ -197,6 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `<button class="btn-aprovar" style="background: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" data-id="${c.id}" data-action="desaprovar">Aprovada ✓</button>`
                     : `<button class="btn-aprovar" style="background: var(--primary); color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" data-id="${c.id}" data-action="aprovar">Aprovar</button>`;
 
+                let trocarFotosHtml = `
+                    <label class="btn-trocar-foto" style="display:inline-block; margin-top:5px; background:var(--card-bg); color:var(--text-main); border: 1px solid var(--card-border); padding: 5px 10px; border-radius:4px; font-size: 0.8rem; cursor:pointer; text-align:center;">
+                        Trocar Foto(s)
+                        <input type="file" class="input-trocar-foto" data-id="${c.id}" accept="image/*" style="display:none;" multiple>
+                    </label>
+                `;
+
                 tr.innerHTML = `
                     <td>
                         <div class="candidata-col">
@@ -212,7 +219,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${c.localidade}</td>
                     <td>${parentescoStatus}</td>
                     <td>${authStatus}</td>
-                    <td>${aprovarBtnHtml}</td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            ${aprovarBtnHtml}
+                            ${trocarFotosHtml}
+                        </div>
+                    </td>
                 `;
                 inscricoesBody.appendChild(tr);
             });
@@ -273,6 +285,62 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Event listener for Trocar Foto
+    document.getElementById('inscricoesBody').addEventListener('change', async (e) => {
+        if (e.target.classList.contains('input-trocar-foto')) {
+            const input = e.target;
+            const id = input.getAttribute('data-id');
+            const files = input.files;
+            
+            if (!files || files.length === 0) return;
+
+            const label = input.parentElement;
+            const originalLabelHtml = label.innerHTML;
+            label.innerHTML = 'Enviando...';
+            label.style.pointerEvents = 'none';
+
+            try {
+                let fotosUrls = [];
+                for (let i = 0; i < files.length; i++) {
+                    const fotoFile = files[i];
+                    const fileExt = fotoFile.name.split('.').pop();
+                    const fileName = `${Date.now()}_foto_prof_${i}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    
+                    const { data, error } = await supabaseClient.storage
+                        .from('garota_regata_media')
+                        .upload(`fotos/${fileName}`, fotoFile, {
+                            contentType: fotoFile.type
+                        });
+
+                    if (error) throw error;
+                    
+                    const { data: publicUrlData } = supabaseClient.storage
+                        .from('garota_regata_media')
+                        .getPublicUrl(`fotos/${fileName}`);
+                    
+                    fotosUrls.push(publicUrlData.publicUrl);
+                }
+
+                // Update no banco
+                const { error: updateError } = await supabaseClient
+                    .from('candidatas')
+                    .update({ fotos_urls: fotosUrls })
+                    .eq('id', id);
+
+                if (updateError) throw updateError;
+
+                alert('Fotos atualizadas com sucesso!');
+                loadResults(); // Recarrega para mostrar as novas fotos
+            } catch (err) {
+                console.error('Erro ao trocar fotos:', err);
+                alert('Erro ao trocar fotos. Verifique as permissões de Storage e Update (RLS) no Supabase.');
+                label.innerHTML = originalLabelHtml;
+                label.style.pointerEvents = 'auto';
+            }
+        }
+    });
+
 
     // Configurar atualização em tempo real (Realtime do Supabase)
     supabaseClient
