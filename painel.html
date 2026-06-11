@@ -80,9 +80,50 @@
         </div>
 
         <div class="leaderboard-container">
+            <h2>Notas dos Jurados (Avaliações)</h2>
+            <div class="table-responsive">
+                <table class="leaderboard-table hidden" id="notasJuradosTable">
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Candidata</th>
+                            <th>Traje Banho</th>
+                            <th>Traje Típico</th>
+                            <th>Penalidade</th>
+                            <th>Total (Jurados)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notasJuradosBody">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="leaderboard-container">
             <h2>Vídeos e Apresentações</h2>
             <div id="videosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 10px 0;">
                 <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Penalidade -->
+    <div id="penaltyModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Aplicar Penalidade</h2>
+            <p style="margin-bottom: 20px;">Candidata: <strong id="penaltyCandidateName"></strong></p>
+            <div class="input-group" style="text-align: left;">
+                <label>Motivo da Penalidade (Regra Descumpida)</label>
+                <input type="text" id="penaltyReason" placeholder="Ex: Atraso na apresentação">
+            </div>
+            <div class="input-group" style="text-align: left; margin-top: 15px;">
+                <label>Pontos a Subtrair (ex: -5)</label>
+                <input type="number" id="penaltyPoints" placeholder="-5" max="0">
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="cancelPenaltyBtn" class="cancel-btn">Cancelar</button>
+                <button type="button" id="savePenaltyBtn" class="submit-btn" style="background: var(--error);">Salvar Penalidade</button>
             </div>
         </div>
     </div>

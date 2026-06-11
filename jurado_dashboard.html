@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Jurado - Garota Regata</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logoregata.png">
+    <style>
+        .judge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .judge-info {
+            text-align: left;
+        }
+        .judge-info h2 {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--text-light);
+            color: var(--text-light);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .notas-section {
+            text-align: left;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.03);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .notas-section h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 1.1rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .nota-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .nota-row label {
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+        .nota-row select {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+        .modal-content {
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="voting-container" style="max-width: 1000px;">
+        <header>
+            <img src="logo.png" alt="34ª Regata de Lagoinha" class="logo" style="max-width: 150px;">
+            <div class="judge-header">
+                <div class="judge-info">
+                    <h2 id="juradoNameDisplay">Bem-vindo, Jurado</h2>
+                </div>
+                <button id="logoutBtn" class="logout-btn">Sair</button>
+            </div>
+            <h1 style="font-size: 2.2rem;">Avaliação Oficial</h1>
+            <p>Atribua suas notas (8 a 10) para cada candidata nos critérios abaixo.</p>
+        </header>
+
+        <div id="loadingMessage" class="loading-message">Carregando candidatas...</div>
+        <div id="errorMessage" class="error-message hidden">Erro ao carregar candidatas. Tente novamente mais tarde.</div>
+
+        <div id="candidatesGrid" class="candidates-grid hidden">
+            <!-- Candidatas serão inseridas aqui via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal de Avaliação -->
+    <div id="evaluateModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 5px;">Avaliar Candidata</h2>
+            <p style="margin-bottom: 20px; color: var(--text-muted);"><strong id="modalCandidateName"></strong></p>
+            
+            <form id="evaluationForm">
+                <div class="notas-section" id="sectionBanho">
+                    <h3>Traje de Banho</h3>
+                    <div class="nota-row">
+                        <label>Desenvoltura</label>
+                        <select id="banho_desenvoltura" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Postura</label>
+                        <select id="banho_postura" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Passarela</label>
+                        <select id="banho_passarela" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Elegância</label>
+                        <select id="banho_elegancia" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Simpatia</label>
+                        <select id="banho_simpatia" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Beleza</label>
+                        <select id="banho_beleza" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="notas-section" id="sectionTipico">
+                    <h3>Traje Típico</h3>
+                    <div class="nota-row">
+                        <label>Criatividade e Originalidade</label>
+                        <select id="tipico_criatividade" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Fidelidade ao Tema</label>
+                        <select id="tipico_fidelidade" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Representatividade Cultural</label>
+                        <select id="tipico_representatividade" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Postura</label>
+                        <select id="tipico_postura" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="nota-row">
+                        <label>Apresentação da Candidata</label>
+                        <select id="tipico_apresentacao" required>
+                            <option value="" disabled selected>-</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelEvaluateBtn" class="cancel-btn">Cancelar</button>
+                    <button type="submit" id="submitEvaluateBtn" class="submit-btn">Salvar Notas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="jurado_dashboard.js"></script>
+</body>
+
+</html>

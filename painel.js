@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Buscar todas as candidatas (com dados completos)
             const { data: candidatas, error: candidatasError } = await supabaseClient
                 .from('candidatas')
-                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, video_url, mora_paraipaba, aprovada');
+                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, video_url, mora_paraipaba, aprovada, penalidade_pontos, penalidade_motivo');
 
             if (candidatasError) throw candidatasError;
 
@@ -130,10 +130,72 @@ document.addEventListener('DOMContentLoaded', () => {
             const inscricoesBody = document.getElementById('inscricoesBody');
             const inscricoesTable = document.getElementById('inscricoesTable');
             const videosGrid = document.getElementById('videosGrid');
+            const notasJuradosBody = document.getElementById('notasJuradosBody');
+            const notasJuradosTable = document.getElementById('notasJuradosTable');
             
             inscricoesBody.innerHTML = '';
             videosGrid.innerHTML = '';
-            // Ordenar por nome
+            notasJuradosBody.innerHTML = '';
+
+            // Buscar notas dos jurados
+            const { data: notasBanho } = await supabaseClient.from('notas_traje_banho').select('*');
+            const { data: notasTipico } = await supabaseClient.from('notas_traje_tipico').select('*');
+
+            // Calcular pontuação de cada candidata baseada nos jurados
+            const candidatasNotas = candidatas.map(c => {
+                const cBanho = (notasBanho || []).filter(n => n.candidata_id === c.id);
+                const cTipico = (notasTipico || []).filter(n => n.candidata_id === c.id);
+
+                let banhoTotal = 0;
+                cBanho.forEach(n => {
+                    banhoTotal += (n.desenvoltura || 0) + (n.postura || 0) + (n.passarela || 0) + (n.elegancia || 0) + (n.simpatia || 0) + (n.beleza || 0);
+                });
+
+                let tipicoTotal = 0;
+                cTipico.forEach(n => {
+                    tipicoTotal += (n.criatividade_originalidade || 0) + (n.fidelidade_tema || 0) + (n.representatividade_cultural || 0) + (n.postura || 0) + (n.apresentacao_candidata || 0);
+                });
+
+                const penalidade = c.penalidade_pontos || 0;
+                const totalGeral = banhoTotal + tipicoTotal + penalidade;
+
+                return {
+                    ...c,
+                    banhoTotal,
+                    tipicoTotal,
+                    penalidade,
+                    totalGeral
+                };
+            });
+
+            // Ordenar ranking dos jurados
+            candidatasNotas.sort((a, b) => b.totalGeral - a.totalGeral);
+
+            candidatasNotas.forEach((c, index) => {
+                const tr = document.createElement('tr');
+                const fotoUrl = (c.fotos_urls && c.fotos_urls.length > 0) ? c.fotos_urls[0] : 'https://via.placeholder.com/40';
+                let medal = '';
+                if (index === 0) medal = '👑 ';
+                if (index === 1) medal = '🥈 ';
+                if (index === 2) medal = '🥉 ';
+
+                tr.innerHTML = `
+                    <td class="posicao-col">${medal}${index + 1}º</td>
+                    <td>
+                        <div class="candidata-col">
+                            <img src="${fotoUrl}" alt="${c.nome}">
+                            <strong>${c.nome}</strong>
+                        </div>
+                    </td>
+                    <td style="font-weight: 600;">${c.banhoTotal} pts</td>
+                    <td style="font-weight: 600;">${c.tipicoTotal} pts</td>
+                    <td style="color: var(--error); font-weight: bold;">${c.penalidade < 0 ? c.penalidade : 0}</td>
+                    <td style="font-weight: 800; font-size: 1.2rem; color: var(--primary);">${c.totalGeral}</td>
+                `;
+                notasJuradosBody.appendChild(tr);
+            });
+
+            // Ordenar por nome para tabela de inscrições
             const candidatasOrdenadas = [...candidatas].sort((a, b) => a.nome.localeCompare(b.nome));
             
             candidatasOrdenadas.forEach(c => {
@@ -204,18 +266,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                 `;
 
+                let penalidadeBtnHtml = `
+                    <button class="btn-penalidade" style="background: var(--error); color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;" data-id="${c.id}" data-nome="${c.nome}">
+                        Penalizar
+                    </button>
+                `;
+
+                let fotosHtml = '';
+                if (c.fotos_urls && c.fotos_urls.length > 0) {
+                    fotosHtml = `<div style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 5px;">` + 
+                        c.fotos_urls.map(url => `
+                            <a href="${url}" target="_blank" title="Ver foto">
+                                <img src="${url}" alt="${c.nome}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--card-border);">
+                            </a>
+                        `).join('') + `</div>`;
+                } else {
+                    fotosHtml = `<img src="https://via.placeholder.com/40" alt="Sem foto">`;
+                }
+
                 tr.innerHTML = `
                     <td>
-                        <div class="candidata-col">
-                            <a href="${fotoUrl}" target="_blank" title="Ver foto em tamanho real">
-                                <img src="${fotoUrl}" alt="${c.nome}">
-                            </a>
+                        <div class="candidata-col" style="align-items: flex-start; flex-direction: column;">
+                            ${fotosHtml}
                             <strong>${c.nome}</strong>
                         </div>
                     </td>
                     <td style="color: var(--text-muted); font-size: 0.9rem;">${c.cpf || '-'}</td>
                     <td style="font-weight: bold; color: ${c.idade < 18 ? 'var(--primary)' : 'inherit'};">${c.idade}</td>
-                    <td><a href="https://wa.me/55${c.contato.replace(/\D/g, '')}" target="_blank" style="color: var(--text-main); text-decoration: none;">${c.contato}</a></td>
+                    <td><a href="https://wa.me/55${c.contato.replace(/\\D/g, '')}" target="_blank" style="color: var(--text-main); text-decoration: none;">${c.contato}</a></td>
                     <td>${c.localidade}</td>
                     <td>${parentescoStatus}</td>
                     <td>${authStatus}</td>
@@ -223,15 +301,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="display: flex; flex-direction: column; gap: 5px;">
                             ${aprovarBtnHtml}
                             ${trocarFotosHtml}
+                            ${penalidadeBtnHtml}
                         </div>
                     </td>
                 `;
-                inscricoesBody.appendChild(tr);
+                inscricoesBody.appendChild(tr);                inscricoesBody.appendChild(tr);
             });
 
             loadingPanel.classList.add('hidden');
             leaderboardTable.classList.remove('hidden');
             inscricoesTable.classList.remove('hidden');
+            notasJuradosTable.classList.remove('hidden');
 
         } catch (error) {
             console.error('Erro ao carregar resultados:', error);
@@ -364,6 +444,86 @@ document.addEventListener('DOMContentLoaded', () => {
                 refreshBtn.textContent = 'Atualização em Tempo Real Ativa 🟢';
             }
         });
+
+    // Event listener for Penalidade
+    let currentPenaltyId = null;
+    const penaltyModal = document.getElementById('penaltyModal');
+    const penaltyCandidateName = document.getElementById('penaltyCandidateName');
+    const penaltyReason = document.getElementById('penaltyReason');
+    const penaltyPoints = document.getElementById('penaltyPoints');
+    const savePenaltyBtn = document.getElementById('savePenaltyBtn');
+    const cancelPenaltyBtn = document.getElementById('cancelPenaltyBtn');
+
+    document.getElementById('inscricoesBody').addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-penalidade')) {
+            const btn = e.target;
+            currentPenaltyId = btn.getAttribute('data-id');
+            penaltyCandidateName.textContent = btn.getAttribute('data-nome');
+            penaltyReason.value = '';
+            penaltyPoints.value = '';
+            penaltyModal.classList.remove('hidden');
+        }
+    });
+
+    cancelPenaltyBtn.addEventListener('click', () => {
+        penaltyModal.classList.add('hidden');
+        currentPenaltyId = null;
+    });
+
+    savePenaltyBtn.addEventListener('click', async () => {
+        if (!currentPenaltyId) return;
+        const motivo = penaltyReason.value;
+        const pontos = parseInt(penaltyPoints.value) || 0;
+
+        if (pontos > 0) {
+            alert("Penalidades devem ser números negativos ou zero (ex: -5)");
+            return;
+        }
+
+        savePenaltyBtn.disabled = true;
+        savePenaltyBtn.textContent = 'Salvando...';
+
+        try {
+            // Buscar dados atuais da candidata
+            const { data: candData, error: fetchError } = await supabaseClient
+                .from('candidatas')
+                .select('penalidade_pontos, penalidade_motivo')
+                .eq('id', currentPenaltyId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            const currentPontos = candData.penalidade_pontos || 0;
+            const currentMotivo = candData.penalidade_motivo || '';
+
+            const novosPontos = currentPontos + pontos;
+            
+            // Adiciona o novo motivo na lista com os pontos específicos dessa infração
+            let textoInfracao = `[${pontos} pts] ${motivo}`;
+            let novoMotivo = currentMotivo ? currentMotivo + '\\n' + textoInfracao : textoInfracao;
+
+            const { error } = await supabaseClient
+                .from('candidatas')
+                .update({ 
+                    penalidade_pontos: novosPontos, 
+                    penalidade_motivo: novoMotivo 
+                })
+                .eq('id', currentPenaltyId);
+
+            if (error) throw error;
+            
+            alert('Penalidade aplicada com sucesso!');
+            penaltyModal.classList.add('hidden');
+            currentPenaltyId = null;
+            loadResults();
+        } catch (err) {
+            console.error('Erro ao aplicar penalidade:', err);
+            alert('Erro ao aplicar penalidade.');
+        } finally {
+            savePenaltyBtn.disabled = false;
+            savePenaltyBtn.textContent = 'Salvar Penalidade';
+        }
+    });
 
     // Carregar na inicialização
     loadConfig();

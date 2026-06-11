@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login do Jurado - Garota Regata</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logoregata.png">
+</head>
+<body>
+    <div class="container theme-sertao-mar">
+        <header>
+            <img src="logo.png" alt="34ª Regata de Lagoinha" class="logo">
+            <h1>Portal do Jurado</h1>
+            <p>O sertão vai virar mar: da Terra do Coco à mais bela praia do Ceará</p>
+        </header>
+
+        <form id="juradoLoginForm">
+            <div class="input-group">
+                <label for="login">Nome do Jurado <span class="asterisk">*</span></label>
+                <input type="text" id="login" name="login" placeholder="Seu nome" required>
+            </div>
+
+            <div class="input-group">
+                <label for="senha">Senha <span class="asterisk">*</span></label>
+                <input type="password" id="senha" name="senha" placeholder="Sua senha" required>
+            </div>
+
+            <div id="loginError" class="error-message hidden" style="padding: 15px; font-size: 0.95rem; background-color: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--error);">
+                Nome ou senha incorretos.
+            </div>
+
+            <button type="submit" class="submit-btn" id="loginBtn">Entrar no Painel</button>
+        </form>
+    </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="jurado_login.js"></script>
+</body>
+</html>
