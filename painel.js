@@ -13,6 +13,67 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataEncerramentoInput = document.getElementById('dataEncerramentoInput');
     const saveConfigBtn = document.getElementById('saveConfigBtn');
     const configStatus = document.getElementById('configStatus');
+    
+    // Login Elements
+    const adminLoginOverlay = document.getElementById('adminLoginOverlay');
+    const adminContent = document.getElementById('adminContent');
+    const adminPasswordInput = document.getElementById('adminPasswordInput');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const adminLoginError = document.getElementById('adminLoginError');
+
+    let adminPass = localStorage.getItem('admin_senha') || '';
+
+    // Verifica Login
+    async function checkLogin(senha) {
+        try {
+            const { data, error } = await supabaseClient.rpc('verificar_senha_admin', { senha_tentativa: senha });
+            if (error) throw error;
+            return data; // returns boolean
+        } catch(e) {
+            console.error('Erro ao verificar senha:', e);
+            return false;
+        }
+    }
+
+    async function initAdmin() {
+        if (adminPass) {
+            const isLogado = await checkLogin(adminPass);
+            if (isLogado) {
+                adminLoginOverlay.style.display = 'none';
+                adminContent.style.display = 'block';
+                loadConfig();
+                loadResults();
+            } else {
+                localStorage.removeItem('admin_senha');
+                adminPass = '';
+            }
+        }
+    }
+
+    adminLoginBtn.addEventListener('click', async () => {
+        const pass = adminPasswordInput.value;
+        adminLoginBtn.textContent = 'Verificando...';
+        adminLoginBtn.disabled = true;
+        adminLoginError.style.display = 'none';
+
+        const isLogado = await checkLogin(pass);
+        if (isLogado) {
+            adminPass = pass;
+            localStorage.setItem('admin_senha', pass);
+            adminLoginOverlay.style.display = 'none';
+            adminContent.style.display = 'block';
+            loadConfig();
+            loadResults();
+        } else {
+            adminLoginError.style.display = 'block';
+        }
+        
+        adminLoginBtn.textContent = 'Entrar no Painel';
+        adminLoginBtn.disabled = false;
+    });
+
+    // Inicializa
+    initAdmin();
 
     // Carregar configuração atual
     async function loadConfig() {
@@ -336,16 +397,13 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Processando...';
             
             try {
-                const { data, error } = await supabaseClient
-                    .from('candidatas')
-                    .update({ aprovada: isAprovando })
-                    .eq('id', id)
-                    .select();
+                const { data, error } = await supabaseClient.rpc('admin_aprovar_candidata', {
+                    c_id: id,
+                    is_aprovada: isAprovando,
+                    senha: adminPass
+                });
                     
                 if (error) throw error;
-                if (!data || data.length === 0) {
-                    throw new Error("Permissão negada (RLS). Você precisa adicionar a política de UPDATE no Supabase.");
-                }
                 
                 if (isAprovando) {
                     btn.style.background = '#10b981';
@@ -358,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 console.error('Erro ao atualizar status:', err);
-                alert('Erro ao atualizar: ' + (err.message || 'Verifique se a coluna "aprovada" existe e se há política de UPDATE.'));
+                alert('Erro ao atualizar: ' + (err.message || 'Verifique a senha ou permissão.'));
                 btn.textContent = isAprovando ? 'Aprovar' : 'Aprovada ✓';
             } finally {
                 btn.disabled = false;
@@ -484,31 +542,12 @@ document.addEventListener('DOMContentLoaded', () => {
         savePenaltyBtn.textContent = 'Salvando...';
 
         try {
-            // Buscar dados atuais da candidata
-            const { data: candData, error: fetchError } = await supabaseClient
-                .from('candidatas')
-                .select('penalidade_pontos, penalidade_motivo')
-                .eq('id', currentPenaltyId)
-                .single();
-
-            if (fetchError) throw fetchError;
-
-            const currentPontos = candData.penalidade_pontos || 0;
-            const currentMotivo = candData.penalidade_motivo || '';
-
-            const novosPontos = currentPontos + pontos;
-            
-            // Adiciona o novo motivo na lista com os pontos específicos dessa infração
-            let textoInfracao = `[${pontos} pts] ${motivo}`;
-            let novoMotivo = currentMotivo ? currentMotivo + '\\n' + textoInfracao : textoInfracao;
-
-            const { error } = await supabaseClient
-                .from('candidatas')
-                .update({ 
-                    penalidade_pontos: novosPontos, 
-                    penalidade_motivo: novoMotivo 
-                })
-                .eq('id', currentPenaltyId);
+            const { data, error } = await supabaseClient.rpc('admin_penalizar', {
+                c_id: currentPenaltyId,
+                pontos: pontos,
+                motivo: motivo,
+                senha: adminPass
+            });
 
             if (error) throw error;
             
@@ -518,14 +557,12 @@ document.addEventListener('DOMContentLoaded', () => {
             loadResults();
         } catch (err) {
             console.error('Erro ao aplicar penalidade:', err);
-            alert('Erro ao aplicar penalidade.');
+            alert('Erro ao aplicar penalidade: ' + err.message);
         } finally {
             savePenaltyBtn.disabled = false;
             savePenaltyBtn.textContent = 'Salvar Penalidade';
         }
     });
 
-    // Carregar na inicialização
-    loadConfig();
-    loadResults();
+    // loadConfig() e loadResults() agora são chamados após o login.
 });

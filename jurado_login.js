@@ -25,22 +25,20 @@ document.addEventListener('DOMContentLoaded', () => {
         loginError.classList.add('hidden');
 
         try {
-            // Check credentials in profiles table
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('nome_completo', loginInput)
-                .eq('password', senhaInput)
-                .single();
+            // Check credentials securely via RPC
+            const { data, error } = await supabaseClient.rpc('login_jurado_seguro', {
+                nome_jurado: loginInput,
+                senha_jurado: senhaInput
+            });
 
-            if (error || !data) {
+            if (error || !data || !data.success) {
                 loginError.textContent = 'Nome ou senha incorretos.';
                 loginError.classList.remove('hidden');
             } else {
                 // Save session in localStorage
                 const sessionData = {
                     id: data.id,
-                    nome: data.nome_completo
+                    nome: data.nome
                 };
                 localStorage.setItem('jurado_session', JSON.stringify(sessionData));
                 

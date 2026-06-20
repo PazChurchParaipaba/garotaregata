@@ -38,6 +38,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         visitorId = localStorage.getItem('fallback_visitor_id');
     }
 
+    // ==========================================
+    // 🔒 SUPER TRAVA DE NAVEGADOR
+    // ==========================================
+    const DB_NAME = 'RegataVotosDB';
+    const STORE_NAME = 'votos';
+
+    function initIndexedDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function setSuperCookieVoto() {
+        // 1. LocalStorage
+        localStorage.setItem('voted_garota_regata', 'true');
+        
+        // 2. Cookie (10 anos)
+        const d = new Date();
+        d.setTime(d.getTime() + (10*365*24*60*60*1000));
+        document.cookie = "voted_garota_regata=true;expires=" + d.toUTCString() + ";path=/";
+
+        // 3. IndexedDB
+        try {
+            const db = await initIndexedDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.put({ id: 'voto_status', voted: true });
+        } catch(e) {
+            console.error('Erro IndexedDB', e);
+        }
+    }
+
+    async function checkSuperCookieVoto() {
+        // 1. LocalStorage
+        if (localStorage.getItem('voted_garota_regata') === 'true') return true;
+        
+        // 2. Cookie
+        if (document.cookie.indexOf('voted_garota_regata=true') !== -1) return true;
+
+        // 3. IndexedDB
+        try {
+            const db = await initIndexedDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get('voto_status');
+                req.onsuccess = () => {
+                    if (req.result && req.result.voted) resolve(true);
+                    else resolve(false);
+                };
+                req.onerror = () => resolve(false);
+            });
+        } catch(e) {
+            return false;
+        }
+    }
+
     // Verificar se votação já encerrou buscando do banco
     let dataFim = null;
     try {
@@ -163,10 +228,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         confirmVoteBtn.textContent = 'Processando...';
         confirmVoteBtn.disabled = true;
 
-        if (localStorage.getItem('voted_garota_regata') === 'true') {
+        const hasVoted = await checkSuperCookieVoto();
+        if (hasVoted) {
             closeVoteModal();
             showResult('Voto Negado', 'Você já registrou um voto neste dispositivo.', true);
             resetConfirmBtn();
+            // Re-aplicar a trava por precaução caso ele tenha tentado limpar parte dela
+            setSuperCookieVoto();
             return;
         }
 
@@ -181,32 +249,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            const { error } = await supabaseClient
-                .from('votos')
-                .insert([
-                    { candidata_id: selectedCandidateId, device_fingerprint: visitorId }
-                ]);
+            // Chamando a RPC Segura em vez de fazer o INSERT direto
+            const { data, error } = await supabaseClient.rpc('registrar_voto', {
+                c_id: selectedCandidateId,
+                fingerprint: visitorId
+            });
 
             if (error) {
-                // Checa erro de chave duplicada ou erro genérico de política
-                if (error.code === '23505' || (error.message && error.message.toLowerCase().includes('duplicate'))) {
-                    throw new Error('DUPLICATE');
-                }
                 throw error;
             }
 
-            localStorage.setItem('voted_garota_regata', 'true');
+            // Aplicar a super trava
+            await setSuperCookieVoto();
+            
             closeVoteModal();
             showResult('Voto Computado!', 'Seu voto foi registrado com sucesso. Obrigado por participar!', false);
 
         } catch (error) {
             console.error("Erro ao votar:", error);
             closeVoteModal();
-            if (error.message === 'DUPLICATE') {
+            
+            if (error.message && error.message.includes('Voto duplicado') || error.code === '23505') {
                  showResult('Voto Negado', 'Já existe um voto registrado para este dispositivo no nosso sistema.', true);
-                 localStorage.setItem('voted_garota_regata', 'true');
+                 setSuperCookieVoto();
             } else {
-                 showResult('Erro', 'Ocorreu um erro ao registrar seu voto. Tente novamente mais tarde.', true);
+                 showResult('Erro', 'Ocorreu um erro ao registrar seu voto. Verifique a conexão e tente novamente.', true);
             }
         } finally {
             resetConfirmBtn();
