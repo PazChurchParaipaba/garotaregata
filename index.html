@@ -15,87 +15,10 @@
     <div class="container">
         <header>
             <img src="logo.png" alt="34ª Regata de Lagoinha" class="logo">
-            <p>Faça seu cadastro para o Garota Regata 2026</p>
+            <h2 style="margin-top: 20px; font-size: 1.5rem; font-weight: 800; line-height: 1.5; text-align: center; padding: 40px 20px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                INSCRIÇÕES ENCERRADAS,<br>AGUARDE A LIBERAÇÃO DO PAINEL DE VOTAÇÃO
+            </h2>
         </header>
-
-        <form id="registrationForm">
-            <div class="input-group">
-                <label for="nome">Nome Completo <span class="asterisk">*</span></label>
-                <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
-            </div>
-
-            <div class="input-group">
-                <label for="cpf">CPF <span class="asterisk">*</span></label>
-                <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" required maxlength="14">
-            </div>
-
-            <div class="row">
-                <div class="input-group">
-                    <label for="idade">Idade <span class="asterisk">*</span></label>
-                    <input type="number" id="idade" name="idade" placeholder="Sua idade" min="0" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="contato">Número para Contato <span class="asterisk">*</span></label>
-                    <input type="tel" id="contato" name="contato" placeholder="(00) 00000-0000" required>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="localidade">Localidade (Cidade/Bairro) <span class="asterisk">*</span></label>
-                <input type="text" id="localidade" name="localidade" placeholder="Onde você mora?" required>
-            </div>
-
-
-            <div class="input-group">
-                <label for="video_apresentacao">Vídeo de Apresentação (Máx: 1 minuto / 200MB) <span class="asterisk">*</span></label>
-                <div class="file-upload">
-                    <input type="file" id="video_apresentacao" name="video_apresentacao" accept="video/*" required>
-                    <p class="file-info" id="video-info">Faça o upload de um vídeo seu de no máximo 1 minuto. Atenção: O tamanho máximo do arquivo é de 200MB.</p>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="mora_paraipaba">Você reside em Paraipaba? <span class="asterisk">*</span></label>
-                <select id="mora_paraipaba" name="mora_paraipaba" required>
-                    <option value="" disabled selected>Selecione uma opção</option>
-                    <option value="sim">Sim, moro em Paraipaba</option>
-                    <option value="nao">Não, moro em outra cidade</option>
-                </select>
-            </div>
-
-            <div class="input-group hidden" id="alertaParentesco" style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                <p style="color: var(--text-main); font-size: 0.95rem; margin: 0; line-height: 1.5;">
-                    <strong style="color: #f59e0b;">⚠️ Atenção:</strong> Como você não mora em Paraipaba, é <strong>OBRIGATÓRIO</strong> que no seu vídeo de 1 minuto você explique detalhadamente quem é a sua família (grau de parentesco e nomes) que reside em Paraipaba.
-                </p>
-            </div>
-
-            <div class="input-group">
-                <label for="fotos">Fotos da Candidata <span class="asterisk">*</span></label>
-                <div class="file-upload">
-                    <input type="file" id="fotos" name="fotos" accept="image/*" multiple required>
-                    <p class="file-info" id="fotos-info">Faça o upload de uma ou mais fotos com boa qualidade.</p>
-                </div>
-            </div>
-
-            <div class="input-group hidden" id="authGroup" style="background-color: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                <label for="autorizacao">Autorização dos Pais (Escrita à Mão) <span class="asterisk">*</span></label>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Escreva em um papel: <em>"Eu, [Nome do Responsável], autorizo minha filha [Nome da Candidata] a participar do concurso Garota Regata."</em> Assine e tire uma foto nítida.</p>
-                <div class="file-upload">
-                    <input type="file" id="autorizacao" name="autorizacao" accept="image/*">
-                    <p class="file-info">Faça o upload da foto da autorização escrita à mão.</p>
-                </div>
-            </div>
-
-            <div class="input-group checkbox-group" style="margin-top: 15px; margin-bottom: 25px;">
-                <label style="display: flex; gap: 12px; align-items: flex-start; font-weight: 400; font-size: 0.95rem; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" id="aceite_regras" name="aceite_regras" required style="margin-top: 5px; cursor: pointer; width: 18px; height: 18px; flex-shrink: 0;">
-                    <span>Declaro que li e consinto com as informações contidas no <a href="Regulamento da XVI Garota Regata de Lagoinha .pdf" target="_blank" style="color: var(--primary-color); text-decoration: underline; font-weight: 600;">Regulamento da XVI Garota Regata de Lagoinha</a>. Estou ciente de que o não cumprimento de qualquer requisito, incluindo os critérios de residência e/ou parentesco previstos no regulamento, implicará em minha desclassificação automática do concurso.</span>
-                </label>
-            </div>
-
-            <button type="submit" class="submit-btn">Realizar Cadastro</button>
-        </form>
     </div>
 
     <!-- Supabase JS Client -->
