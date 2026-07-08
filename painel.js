@@ -115,11 +115,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    async function loadResults() {
-        loadingPanel.classList.remove('hidden');
-        leaderboardTable.classList.add('hidden');
+    async function loadResults(isBackgroundUpdate = false) {
+        if (!isBackgroundUpdate) {
+            loadingPanel.classList.remove('hidden');
+            leaderboardTable.classList.add('hidden');
+            // Ocultar as outras tabelas durante o carregamento inicial completo
+            const iTable = document.getElementById('inscricoesTable');
+            const nTable = document.getElementById('notasJuradosTable');
+            if (iTable) iTable.classList.add('hidden');
+            if (nTable) nTable.classList.add('hidden');
+        }
+        
         refreshBtn.disabled = true;
-        refreshBtn.textContent = 'Atualizando...';
+        if (!isBackgroundUpdate) {
+            refreshBtn.textContent = 'Atualizando...';
+        }
 
         try {
             // Buscar todas as candidatas (com dados completos)
@@ -369,17 +379,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 inscricoesBody.appendChild(tr);                inscricoesBody.appendChild(tr);
             });
 
-            loadingPanel.classList.add('hidden');
-            leaderboardTable.classList.remove('hidden');
-            inscricoesTable.classList.remove('hidden');
-            notasJuradosTable.classList.remove('hidden');
+            if (!isBackgroundUpdate) {
+                loadingPanel.classList.add('hidden');
+                leaderboardTable.classList.remove('hidden');
+                inscricoesTable.classList.remove('hidden');
+                notasJuradosTable.classList.remove('hidden');
+            }
 
         } catch (error) {
             console.error('Erro ao carregar resultados:', error);
             alert('Erro ao carregar os dados. Verifique a conexão com o banco de dados. Você já criou a tabela votos?');
         } finally {
             refreshBtn.disabled = false;
-            refreshBtn.textContent = 'Atualizar Resultados';
+            if (!isBackgroundUpdate) {
+                refreshBtn.textContent = 'Atualizar Resultados';
+            }
         }
     }
 
@@ -491,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
             refreshBtn.textContent = 'Novo voto! Atualizando...';
             refreshBtn.style.background = '#10b981';
             
-            loadResults().then(() => {
+            loadResults(true).then(() => {
                 setTimeout(() => {
                     refreshBtn.textContent = 'Atualização em Tempo Real Ativa 🟢';
                     refreshBtn.style.background = 'var(--primary)';
