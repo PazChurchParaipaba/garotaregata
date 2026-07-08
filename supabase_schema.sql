@@ -263,3 +263,17 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Função Admin: Atualizar Fotos
+CREATE OR REPLACE FUNCTION admin_atualizar_fotos(c_id UUID, novas_fotos TEXT[], senha TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+    IF NOT verificar_senha_admin(senha) THEN
+        RAISE EXCEPTION 'Senha de administrador incorreta.';
+    END IF;
+    
+    UPDATE public.candidatas SET fotos_urls = novas_fotos WHERE id = c_id;
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

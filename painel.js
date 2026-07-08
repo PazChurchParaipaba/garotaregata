@@ -460,11 +460,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     fotosUrls.push(publicUrlData.publicUrl);
                 }
 
-                // Update no banco
-                const { error: updateError } = await supabaseClient
-                    .from('candidatas')
-                    .update({ fotos_urls: fotosUrls })
-                    .eq('id', id);
+                // Update no banco via RPC
+                const { error: updateError } = await supabaseClient.rpc('admin_atualizar_fotos', {
+                    c_id: id,
+                    novas_fotos: fotosUrls,
+                    senha: adminPass
+                });
 
                 if (updateError) throw updateError;
 
@@ -472,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadResults(); // Recarrega para mostrar as novas fotos
             } catch (err) {
                 console.error('Erro ao trocar fotos:', err);
-                alert('Erro ao trocar fotos. Verifique as permissões de Storage e Update (RLS) no Supabase.');
+                alert('Erro: ' + (err.message || JSON.stringify(err)));
                 label.innerHTML = originalLabelHtml;
                 label.style.pointerEvents = 'auto';
             }
