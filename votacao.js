@@ -29,6 +29,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fp = await fpPromise;
         const result = await fp.get();
         visitorId = result.visitorId;
+
+        // Flexibilização para navegadores in-app (Instagram/Facebook)
+        // O FingerprintJS pode gerar IDs iguais para usuários diferentes nesses navegadores
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const isInAppBrowser = (ua.indexOf('Instagram') > -1) || (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1);
+        
+        if (isInAppBrowser) {
+            let localId = localStorage.getItem('inapp_visitor_id');
+            if (!localId) {
+                localId = 'inapp_' + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('inapp_visitor_id', localId);
+            }
+            visitorId = visitorId + '_' + localId;
+        }
+
         console.log("Device Fingerprint gerado com sucesso.");
     } catch (e) {
         console.error("Erro ao gerar fingerprint", e);
@@ -41,8 +56,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ==========================================
     // 🔒 SUPER TRAVA DE NAVEGADOR
     // ==========================================
-    const DB_NAME = 'RegataVotosDB';
-    const STORE_NAME = 'votos';
+    const DB_NAME = 'RegataVotosDB_v2';
+    const STORE_NAME = 'votos_v2';
 
     function initIndexedDB() {
         return new Promise((resolve, reject) => {
@@ -60,12 +75,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function setSuperCookieVoto() {
         // 1. LocalStorage
-        localStorage.setItem('voted_garota_regata', 'true');
+        localStorage.setItem('voted_garota_regata_v2', 'true');
         
         // 2. Cookie (10 anos)
         const d = new Date();
         d.setTime(d.getTime() + (10*365*24*60*60*1000));
-        document.cookie = "voted_garota_regata=true;expires=" + d.toUTCString() + ";path=/";
+        document.cookie = "voted_garota_regata_v2=true;expires=" + d.toUTCString() + ";path=/";
 
         // 3. IndexedDB
         try {
@@ -80,10 +95,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function checkSuperCookieVoto() {
         // 1. LocalStorage
-        if (localStorage.getItem('voted_garota_regata') === 'true') return true;
+        if (localStorage.getItem('voted_garota_regata_v2') === 'true') return true;
         
         // 2. Cookie
-        if (document.cookie.indexOf('voted_garota_regata=true') !== -1) return true;
+        if (document.cookie.indexOf('voted_garota_regata_v2=true') !== -1) return true;
 
         // 3. IndexedDB
         try {
@@ -100,6 +115,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         } catch(e) {
             return false;
+        }
+    }
+
+    // ==========================================
+    // 🔍 CONSULTA AO BANCO PARA REVALIDAR TRAVA
+    // ==========================================
+    if (visitorId) {
+        try {
+            const { data: voteData } = await supabaseClient
+                .from('votos')
+                .select('id')
+                .eq('device_fingerprint', visitorId)
+                .maybeSingle();
+            
+            // Se encontrou no banco, significa que ele votou. Reativamos a trava V2!
+            if (voteData) {
+                setSuperCookieVoto();
+            }
+        } catch(e) {
+            console.error("Erro ao verificar histórico no banco", e);
         }
     }
 
