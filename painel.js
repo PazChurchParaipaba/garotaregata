@@ -139,12 +139,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (candidatasError) throw candidatasError;
 
-            // Buscar todos os votos
-            const { data: votos, error: votosError } = await supabaseClient
-                .from('votos')
-                .select('candidata_id');
+            // Buscar todos os votos com paginação (para contornar o limite de 1000 do Supabase)
+            let votos = [];
+            let hasMore = true;
+            let rangeStart = 0;
+            const limit = 1000;
 
-            if (votosError) throw votosError;
+            while (hasMore) {
+                const { data: batch, error: votosError } = await supabaseClient
+                    .from('votos')
+                    .select('candidata_id')
+                    .range(rangeStart, rangeStart + limit - 1);
+
+                if (votosError) throw votosError;
+
+                votos = votos.concat(batch);
+
+                if (batch.length < limit) {
+                    hasMore = false;
+                } else {
+                    rangeStart += limit;
+                }
+            }
 
             const totalVotos = votos.length;
             totalVotesEl.textContent = totalVotos;
