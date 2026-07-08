@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const { data, error } = await supabaseClient
                 .from('candidatas')
-                .select('*')
+                .select('id, nome, localidade, idade, fotos_urls')
                 .eq('aprovada', true)
                 .order('nome', { ascending: true });
 
@@ -168,7 +168,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const card = document.createElement('div');
             card.className = 'candidate-card';
             
-            const fotoUrl = (c.fotos_urls && c.fotos_urls.length > 0) ? c.fotos_urls[0] : 'https://via.placeholder.com/300x400?text=Sem+Foto';
+            let fotoUrl = (c.fotos_urls && c.fotos_urls.length > 0) ? c.fotos_urls[0] : 'https://via.placeholder.com/300x400?text=Sem+Foto';
+            
+            // Otimização Extrema: Usar proxy CDN global para comprimir (WebP), reduzir a qualidade (80) e redimensionar largura (400px)
+            if (fotoUrl.startsWith('http') && !fotoUrl.includes('placeholder')) {
+                fotoUrl = `https://wsrv.nl/?url=${encodeURIComponent(fotoUrl)}&w=400&q=80&output=webp`;
+            }
 
             card.innerHTML = `
                 <div class="candidate-photo-wrapper">
