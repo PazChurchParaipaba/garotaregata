@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             card.innerHTML = `
                 <div class="candidate-photo-wrapper">
-                    <img src="${fotoUrl}" alt="Foto de ${c.nome}" class="candidate-photo" onerror="this.src='https://via.placeholder.com/300x400?text=Erro+na+Foto'">
+                    <img src="${fotoUrl}" alt="Foto de ${c.nome}" class="candidate-photo" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400?text=Erro+na+Foto'">
                 </div>
                 <div class="candidate-info">
                     <h3>${c.nome}</h3>
