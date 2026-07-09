@@ -156,17 +156,17 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 40px; margin-bottom: 40px;">
-                    <div style="max-width: 600px; margin: 0 auto; width: 100%;">
+                    <div style="max-width: 500px; margin: 0 auto; width: 100%; page-break-inside: avoid;">
                         <h3 style="text-align: center; margin-bottom: 10px;">Proporção de Votos</h3>
-                        <canvas id="auditPieChart"></canvas>
+                        <canvas id="auditPieChart" style="max-height: 350px;"></canvas>
                     </div>
-                    <div>
+                    <div style="max-width: 750px; margin: 0 auto; width: 100%; page-break-inside: avoid;">
                         <h3 style="text-align: center; margin-bottom: 10px;">Quantidade por Candidata</h3>
-                        <canvas id="auditBarChart"></canvas>
+                        <canvas id="auditBarChart" style="max-height: 350px;"></canvas>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 30px;">
+                <div style="max-width: 750px; margin: 0 auto 30px auto; width: 100%; page-break-inside: avoid;">
                     <h3 style="text-align: center; margin-bottom: 10px;">Volume de Votos (Timeline)</h3>
                     <canvas id="auditLineChart" style="max-height: 300px;"></canvas>
                 </div>
