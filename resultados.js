@@ -66,9 +66,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 card.className = 'candidate-card';
                 
                 // Tratar URL da imagem (se for local ou base64)
-                let photoUrl = candidate.foto_url;
-                if (!photoUrl || photoUrl === '') {
-                    photoUrl = 'https://via.placeholder.com/300x400?text=Sem+Foto';
+                let photoUrl = (candidate.fotos_urls && candidate.fotos_urls.length > 0) ? candidate.fotos_urls[0] : 'https://via.placeholder.com/300x400?text=Sem+Foto';
+                
+                if (photoUrl.startsWith('http') && !photoUrl.includes('placeholder')) {
+                    photoUrl = `https://wsrv.nl/?url=${encodeURIComponent(photoUrl)}&w=400&q=80&output=webp`;
                 }
 
                 // Destaque para o primeiro lugar
@@ -77,9 +78,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const votesHtml = `<div style="text-align: center; font-weight: 800; font-size: 1.8rem; color: #10b981; margin: 10px 0;">${candidate.votos_recebidos} Votos</div>`;
 
                 card.innerHTML = `
-                    <div style="position: relative;">
+                    <div class="candidate-photo-wrapper" style="position: relative;">
                         ${crown}
-                        <img src="${photoUrl}" alt="${candidate.nome}">
+                        <img src="${photoUrl}" alt="${candidate.nome}" class="candidate-photo" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400?text=Erro+na+Foto'">
                     </div>
                     <div class="candidate-info">
                         ${positionHtml}
