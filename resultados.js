@@ -7,98 +7,112 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadingMessage = document.getElementById('loadingMessage');
     const errorMessage = document.getElementById('errorMessage');
 
-    try {
-        // Busca candidatas aprovadas
-        const { data: candidatas, error: candidatasError } = await supabaseClient
-            .from('candidatas')
-            .select('*')
-            .eq('aprovada', true);
+    async function loadResults() {
+        try {
+            // Busca candidatas aprovadas
+            const { data: candidatas, error: candidatasError } = await supabaseClient
+                .from('candidatas')
+                .select('*')
+                .eq('aprovada', true);
 
-        if (candidatasError) throw candidatasError;
+            if (candidatasError) throw candidatasError;
 
-        // Busca todos os votos (paginado)
-        let votos = [];
-        let hasMore = true;
-        let rangeStart = 0;
-        const limit = 1000;
+            // Busca todos os votos (paginado)
+            let votos = [];
+            let hasMore = true;
+            let rangeStart = 0;
+            const limit = 1000;
 
-        while (hasMore) {
-            const { data: batch, error: votosError } = await supabaseClient
-                .from('votos')
-                .select('candidata_id')
-                .range(rangeStart, rangeStart + limit - 1);
+            while (hasMore) {
+                const { data: batch, error: votosError } = await supabaseClient
+                    .from('votos')
+                    .select('candidata_id')
+                    .range(rangeStart, rangeStart + limit - 1);
 
-            if (votosError) throw votosError;
+                if (votosError) throw votosError;
 
-            votos = votos.concat(batch);
+                votos = votos.concat(batch);
 
-            if (batch.length < limit) {
-                hasMore = false;
-            } else {
-                rangeStart += limit;
-            }
-        }
-
-        // Contar votos
-        const voteCounts = {};
-        votos.forEach(v => {
-            voteCounts[v.candidata_id] = (voteCounts[v.candidata_id] || 0) + 1;
-        });
-
-        // Adicionar votos às candidatas e ordenar
-        const results = candidatas.map(c => {
-            return {
-                ...c,
-                votos_recebidos: voteCounts[c.id] || 0
-            };
-        });
-
-        results.sort((a, b) => b.votos_recebidos - a.votos_recebidos);
-
-        // Renderizar candidatas
-        candidatesGrid.innerHTML = '';
-        
-        if (results.length === 0) {
-            candidatesGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Nenhuma candidata cadastrada no momento.</p>';
-        } else {
-            results.forEach((candidate, index) => {
-                const card = document.createElement('div');
-                card.className = 'candidate-card';
-                
-                // Tratar URL da imagem (se for local ou base64)
-                let photoUrl = (candidate.fotos_urls && candidate.fotos_urls.length > 0) ? candidate.fotos_urls[0] : 'https://via.placeholder.com/300x400?text=Sem+Foto';
-                
-                if (photoUrl.startsWith('http') && !photoUrl.includes('placeholder')) {
-                    photoUrl = `https://wsrv.nl/?url=${encodeURIComponent(photoUrl)}&w=400&q=80&output=webp`;
+                if (batch.length < limit) {
+                    hasMore = false;
+                } else {
+                    rangeStart += limit;
                 }
+            }
 
-                // Destaque para o primeiro lugar
-                const crown = index === 0 ? '<div style="position: absolute; top: 10px; left: 10px; font-size: 30px; z-index: 10;" title="1º Lugar">👑</div>' : '';
-                const positionHtml = `<div style="text-align: center; font-weight: bold; font-size: 1.2rem; color: #f59e0b; margin-top: 10px;">${index + 1}º Lugar</div>`;
-                const votesHtml = `<div style="text-align: center; font-weight: 800; font-size: 1.8rem; color: #10b981; margin: 10px 0;">${candidate.votos_recebidos} Votos</div>`;
-
-                card.innerHTML = `
-                    <div class="candidate-photo-wrapper" style="position: relative;">
-                        ${crown}
-                        <img src="${photoUrl}" alt="${candidate.nome}" class="candidate-photo" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400?text=Erro+na+Foto'">
-                    </div>
-                    <div class="candidate-info">
-                        ${positionHtml}
-                        <h3>${candidate.nome}</h3>
-                        <p class="locality">${candidate.localidade}</p>
-                        ${votesHtml}
-                    </div>
-                `;
-                candidatesGrid.appendChild(card);
+            // Contar votos
+            const voteCounts = {};
+            votos.forEach(v => {
+                voteCounts[v.candidata_id] = (voteCounts[v.candidata_id] || 0) + 1;
             });
+
+            // Adicionar votos às candidatas e ordenar
+            const results = candidatas.map(c => {
+                return {
+                    ...c,
+                    votos_recebidos: voteCounts[c.id] || 0
+                };
+            });
+
+            results.sort((a, b) => b.votos_recebidos - a.votos_recebidos);
+
+            // Renderizar candidatas
+            candidatesGrid.innerHTML = '';
+            
+            if (results.length === 0) {
+                candidatesGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Nenhuma candidata cadastrada no momento.</p>';
+            } else {
+                results.forEach((candidate, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'candidate-card';
+                    
+                    // Tratar URL da imagem (se for local ou base64)
+                    let photoUrl = (candidate.fotos_urls && candidate.fotos_urls.length > 0) ? candidate.fotos_urls[0] : 'https://via.placeholder.com/300x400?text=Sem+Foto';
+                    
+                    if (photoUrl.startsWith('http') && !photoUrl.includes('placeholder')) {
+                        photoUrl = `https://wsrv.nl/?url=${encodeURIComponent(photoUrl)}&w=400&q=80&output=webp`;
+                    }
+
+                    // Destaque para o primeiro lugar
+                    const crown = index === 0 ? '<div style="position: absolute; top: 10px; left: 10px; font-size: 30px; z-index: 10;" title="1º Lugar">👑</div>' : '';
+                    const positionHtml = `<div style="text-align: center; font-weight: bold; font-size: 1.2rem; color: #f59e0b; margin-top: 10px;">${index + 1}º Lugar</div>`;
+                    const votesHtml = `<div style="text-align: center; font-weight: 800; font-size: 1.8rem; color: #10b981; margin: 10px 0;">${candidate.votos_recebidos} Votos</div>`;
+
+                    card.innerHTML = `
+                        <div class="candidate-photo-wrapper" style="position: relative;">
+                            ${crown}
+                            <img src="${photoUrl}" alt="${candidate.nome}" class="candidate-photo" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400?text=Erro+na+Foto'">
+                        </div>
+                        <div class="candidate-info">
+                            ${positionHtml}
+                            <h3>${candidate.nome}</h3>
+                            <p class="locality">${candidate.localidade}</p>
+                            ${votesHtml}
+                        </div>
+                    `;
+                    candidatesGrid.appendChild(card);
+                });
+            }
+
+            loadingMessage.classList.add('hidden');
+            candidatesGrid.classList.remove('hidden');
+
+        } catch (err) {
+            console.error('Erro ao carregar dados:', err);
+            loadingMessage.classList.add('hidden');
+            errorMessage.classList.remove('hidden');
         }
-
-        loadingMessage.classList.add('hidden');
-        candidatesGrid.classList.remove('hidden');
-
-    } catch (err) {
-        console.error('Erro ao carregar dados:', err);
-        loadingMessage.classList.add('hidden');
-        errorMessage.classList.remove('hidden');
     }
+
+    // Carrega a primeira vez
+    loadResults();
+
+    // Configura atualização em tempo real
+    supabaseClient
+        .channel('resultados_publicos_realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, (payload) => {
+            console.log('Novo voto recebido, atualizando resultados...');
+            loadResults();
+        })
+        .subscribe();
 });
