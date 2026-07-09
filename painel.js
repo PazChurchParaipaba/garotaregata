@@ -618,9 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function carregarDadosAuditoria() {
-        const tbody = document.getElementById('auditTableBody');
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Carregando dados de auditoria...</td></tr>';
-        
         try {
             // Pegar todas as candidatas para ter os nomes
             const { data: candidatasData, error: candError } = await supabaseClient
@@ -657,27 +654,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // Renderizar tabela com últimos 100
-            tbody.innerHTML = '';
-            const ultimosVotos = votosData.slice(0, 100);
-            if (ultimosVotos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhum voto registrado.</td></tr>';
-            } else {
-                ultimosVotos.forEach(v => {
-                    const dataObj = new Date(v.created_at);
-                    const dataStr = dataObj.toLocaleString('pt-BR');
-                    const nome = candidatasMap[v.candidata_id] || 'Candidata Desconhecida';
-                    const fp = v.device_fingerprint.substring(0, 10) + '...';
-                    
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${dataStr}</td>
-                        <td>${nome}</td>
-                        <td title="${v.device_fingerprint}">${fp}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
 
             // Agrupar dados para o gráfico de pizza (Total por candidata)
             const votosPorCandidata = {};
@@ -746,7 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (err) {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Erro ao carregar auditoria: ${err.message}</td></tr>`;
+            alert('Erro ao carregar auditoria: ' + err.message);
         }
     }
 
@@ -803,6 +779,11 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             options: {
                 responsive: true,
+                layout: {
+                    padding: {
+                        top: 30
+                    }
+                },
                 scales: {
                     y: { beginAtZero: true }
                 },
