@@ -74,8 +74,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
 
                     // Destaque para o primeiro lugar
-                    const crown = index === 0 ? '<div style="position: absolute; top: 10px; left: 10px; font-size: 30px; z-index: 10;" title="1º Lugar">👑</div>' : '';
-                    const positionHtml = `<div style="text-align: center; font-weight: bold; font-size: 1.2rem; color: #f59e0b; margin-top: 10px;">${index + 1}º Lugar</div>`;
+                    const isFirst = index === 0;
+                    const crown = isFirst ? '<div style="position: absolute; top: 10px; left: 10px; font-size: 40px; z-index: 10; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));" title="1º Lugar">👑</div>' : '';
+                    const posFontSize = isFirst ? '2rem' : '1.5rem';
+                    const positionHtml = `<div style="text-align: center; font-weight: 800; font-size: ${posFontSize}; color: #f59e0b; margin-top: 10px; text-transform: uppercase;">${index + 1}º Lugar</div>`;
                     const votesHtml = `<div style="text-align: center; font-weight: 800; font-size: 1.8rem; color: #10b981; margin: 10px 0;">${candidate.votos_recebidos} Votos</div>`;
 
                     card.innerHTML = `
