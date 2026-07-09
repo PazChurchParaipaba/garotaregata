@@ -603,6 +603,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let auditPieChartInstance = null;
     let auditLineChartInstance = null;
+    let auditBarChartInstance = null;
+
+    // Registra o plugin globalmente
+    Chart.register(ChartDataLabels);
 
     auditBtn.addEventListener('click', async () => {
         auditModal.classList.remove('hidden');
@@ -752,6 +756,9 @@ document.addEventListener('DOMContentLoaded', () => {
             '#06b6d4', '#d946ef', '#64748b', '#84cc16', '#14b8a6'
         ];
 
+        // Calcular total para % no pie chart
+        const totalVotosAuditoria = pieData.reduce((a, b) => a + b, 0);
+
         const pieCtx = document.getElementById('auditPieChart').getContext('2d');
         if (auditPieChartInstance) auditPieChartInstance.destroy();
         auditPieChartInstance = new Chart(pieCtx, {
@@ -767,7 +774,47 @@ document.addEventListener('DOMContentLoaded', () => {
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { position: 'bottom' },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: (value) => {
+                            if (totalVotosAuditoria === 0) return '';
+                            let p = ((value / totalVotosAuditoria) * 100).toFixed(1);
+                            return p > 3 ? p + '%' : ''; // Oculta se for muito pequeno
+                        }
+                    }
+                }
+            }
+        });
+
+        const barCtx = document.getElementById('auditBarChart').getContext('2d');
+        if (auditBarChartInstance) auditBarChartInstance.destroy();
+        auditBarChartInstance = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: pieLabels,
+                datasets: [{
+                    label: 'Total de Votos',
+                    data: pieData,
+                    backgroundColor: bgColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#333',
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold' },
+                        formatter: (value) => value
+                    }
                 }
             }
         });
@@ -791,6 +838,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 responsive: true,
                 scales: {
                     y: { beginAtZero: true }
+                },
+                plugins: {
+                    datalabels: { display: false } // Oculta datalabels na linha para não poluir
                 }
             }
         });
