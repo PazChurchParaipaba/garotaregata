@@ -629,13 +629,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const candidatasMap = {};
             candidatasData.forEach(c => { candidatasMap[c.id] = c.nome; });
 
-            // Pegar os votos
-            const { data: votosData, error: votosError } = await supabaseClient
-                .from('votos')
-                .select('created_at, candidata_id, device_fingerprint')
-                .order('created_at', { ascending: false });
+            // Pegar os votos (paginado para passar de 1000 registros)
+            let votosData = [];
+            let hasMoreVotos = true;
+            let rangeStartV = 0;
+            const limitV = 1000;
+
+            while (hasMoreVotos) {
+                const { data: batchV, error: votosError } = await supabaseClient
+                    .from('votos')
+                    .select('created_at, candidata_id, device_fingerprint')
+                    .order('created_at', { ascending: false })
+                    .range(rangeStartV, rangeStartV + limitV - 1);
+                    
+                if (votosError) throw votosError;
                 
-            if (votosError) throw votosError;
+                votosData = votosData.concat(batchV);
+                
+                if (batchV.length < limitV) {
+                    hasMoreVotos = false;
+                } else {
+                    rangeStartV += limitV;
+                }
+            }
             
             // Renderizar tabela com últimos 100
             tbody.innerHTML = '';
