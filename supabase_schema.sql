@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS public.configuracoes (
 
 -- Inserir senha padrão do painel (PODE SER ALTERADA AQUI)
 INSERT INTO public.configuracoes (chave, valor) 
-VALUES ('admin_senha', 'regata2026') ON CONFLICT DO NOTHING;
+VALUES ('admin_senha', 'amaiorregatadonordeste2026lagoinhace') ON CONFLICT DO NOTHING;
 
 -- Tabela de Votos
 CREATE TABLE IF NOT EXISTS public.votos (

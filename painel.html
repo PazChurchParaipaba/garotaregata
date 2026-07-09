@@ -44,6 +44,7 @@
             </div>
 
             <button id="refreshBtn" class="submit-btn" style="width: auto; margin: 0 auto; display: block; min-width: 250px;">Atualizar Resultados</button>
+            <button id="auditBtn" class="submit-btn" style="width: auto; margin: 15px auto 0 auto; display: block; min-width: 250px; background: #8b5cf6;">Relatório de Auditoria</button>
         </div>
 
         <div class="leaderboard-container">
@@ -140,6 +141,57 @@
         </div>
     </div>
 
+    <!-- Modal de Auditoria -->
+    <div id="auditModal" class="modal hidden" style="z-index: 10000;">
+        <div class="modal-content" style="max-width: 900px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Relatório de Auditoria - Votação Pública</h2>
+                <button type="button" id="closeAuditBtn" class="cancel-btn" style="width: auto; padding: 5px 15px;">Fechar</button>
+            </div>
+            
+            <div id="auditPrintArea" style="background: var(--bg-color); padding: 20px; border-radius: 8px;">
+                <div style="text-align: center; margin-bottom: 20px; display: none;" id="auditHeader">
+                    <h2>Auditoria da Votação - Garota Regata</h2>
+                    <p id="auditDate"></p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                    <div>
+                        <h3 style="text-align: center; margin-bottom: 10px;">Total de Votos por Candidata</h3>
+                        <canvas id="auditPieChart"></canvas>
+                    </div>
+                    <div>
+                        <h3 style="text-align: center; margin-bottom: 10px;">Volume de Votos (Timeline)</h3>
+                        <canvas id="auditLineChart"></canvas>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px;">Registro Detalhado (Últimos 100 Votos)</h3>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Candidata</th>
+                                <th>Fingerprint (Anônimo)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button type="button" id="exportPdfBtn" class="submit-btn" style="width: 100%; background: #10b981;">Exportar para PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Externos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="painel.js"></script>

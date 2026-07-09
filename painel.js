@@ -595,5 +595,191 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // === AUDITORIA ===
+    const auditBtn = document.getElementById('auditBtn');
+    const auditModal = document.getElementById('auditModal');
+    const closeAuditBtn = document.getElementById('closeAuditBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    
+    let auditPieChartInstance = null;
+    let auditLineChartInstance = null;
+
+    auditBtn.addEventListener('click', async () => {
+        auditModal.classList.remove('hidden');
+        await carregarDadosAuditoria();
+    });
+
+    closeAuditBtn.addEventListener('click', () => {
+        auditModal.classList.add('hidden');
+    });
+
+    async function carregarDadosAuditoria() {
+        const tbody = document.getElementById('auditTableBody');
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Carregando dados de auditoria...</td></tr>';
+        
+        try {
+            // Pegar todas as candidatas para ter os nomes
+            const { data: candidatasData, error: candError } = await supabaseClient
+                .from('candidatas')
+                .select('id, nome')
+                .eq('is_aprovada', true);
+                
+            if (candError) throw candError;
+            
+            const candidatasMap = {};
+            candidatasData.forEach(c => { candidatasMap[c.id] = c.nome; });
+
+            // Pegar os votos
+            const { data: votosData, error: votosError } = await supabaseClient
+                .from('votos')
+                .select('created_at, candidata_id, device_fingerprint')
+                .order('created_at', { ascending: false });
+                
+            if (votosError) throw votosError;
+            
+            // Renderizar tabela com últimos 100
+            tbody.innerHTML = '';
+            const ultimosVotos = votosData.slice(0, 100);
+            if (ultimosVotos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhum voto registrado.</td></tr>';
+            } else {
+                ultimosVotos.forEach(v => {
+                    const dataObj = new Date(v.created_at);
+                    const dataStr = dataObj.toLocaleString('pt-BR');
+                    const nome = candidatasMap[v.candidata_id] || 'Candidata Desconhecida';
+                    const fp = v.device_fingerprint.substring(0, 10) + '...';
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${dataStr}</td>
+                        <td>${nome}</td>
+                        <td title="${v.device_fingerprint}">${fp}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Agrupar dados para o gráfico de pizza (Total por candidata)
+            const votosPorCandidata = {};
+            candidatasData.forEach(c => { votosPorCandidata[c.nome] = 0; });
+            
+            // Agrupar dados para gráfico de linha (Votos por hora)
+            const votosPorHora = {};
+
+            votosData.forEach(v => {
+                const nome = candidatasMap[v.candidata_id] || 'Desconhecida';
+                if (votosPorCandidata[nome] !== undefined) {
+                    votosPorCandidata[nome]++;
+                } else {
+                    votosPorCandidata[nome] = 1;
+                }
+                
+                // Pegar apenas YYYY-MM-DD HH
+                const dataObj = new Date(v.created_at);
+                const horaStr = `${dataObj.toLocaleDateString('pt-BR')} ${dataObj.getHours()}:00`;
+                if (!votosPorHora[horaStr]) {
+                    votosPorHora[horaStr] = 0;
+                }
+                votosPorHora[horaStr]++;
+            });
+
+            // Preparar arrays para Pizza
+            const pieLabels = Object.keys(votosPorCandidata);
+            const pieData = Object.values(votosPorCandidata);
+
+            // Preparar arrays para Linha
+            // Ordenar as chaves (horários)
+            const sortedHoras = Object.keys(votosPorHora).sort((a, b) => {
+                const [dateA, timeA] = a.split(' ');
+                const [diaA, mesA, anoA] = dateA.split('/');
+                const [horaA] = timeA.split(':');
+                const valA = new Date(anoA, mesA - 1, diaA, horaA);
+
+                const [dateB, timeB] = b.split(' ');
+                const [diaB, mesB, anoB] = dateB.split('/');
+                const [horaB] = timeB.split(':');
+                const valB = new Date(anoB, mesB - 1, diaB, horaB);
+                
+                return valA - valB;
+            });
+            const lineData = sortedHoras.map(h => votosPorHora[h]);
+
+            renderizarGraficos(pieLabels, pieData, sortedHoras, lineData);
+            
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Erro ao carregar auditoria: ${err.message}</td></tr>`;
+        }
+    }
+
+    function renderizarGraficos(pieLabels, pieData, lineLabels, lineData) {
+        const bgColors = [
+            '#f43f5e', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b',
+            '#06b6d4', '#d946ef', '#64748b', '#84cc16', '#14b8a6'
+        ];
+
+        const pieCtx = document.getElementById('auditPieChart').getContext('2d');
+        if (auditPieChartInstance) auditPieChartInstance.destroy();
+        auditPieChartInstance = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: pieLabels,
+                datasets: [{
+                    data: pieData,
+                    backgroundColor: bgColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        const lineCtx = document.getElementById('auditLineChart').getContext('2d');
+        if (auditLineChartInstance) auditLineChartInstance.destroy();
+        auditLineChartInstance = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: lineLabels,
+                datasets: [{
+                    label: 'Volume de Votos por Hora',
+                    data: lineData,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    exportPdfBtn.addEventListener('click', () => {
+        const element = document.getElementById('auditPrintArea');
+        const opt = {
+            margin:       10,
+            filename:     'auditoria_votacao_publica.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        const header = document.getElementById('auditHeader');
+        document.getElementById('auditDate').textContent = 'Gerado em: ' + new Date().toLocaleString('pt-BR');
+        header.style.display = 'block';
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            header.style.display = 'none';
+        });
+    });
+
     // loadConfig() e loadResults() agora são chamados após o login.
 });
