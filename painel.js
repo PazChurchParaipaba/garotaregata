@@ -704,6 +704,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const lineData = sortedHoras.map(h => votosPorHora[h]);
 
+            // Preencher Ranking Final
+            const rankingArray = Object.keys(votosPorCandidata).map(nome => {
+                return { nome: nome, votos: votosPorCandidata[nome] };
+            });
+            rankingArray.sort((a, b) => b.votos - a.votos);
+
+            const rankingBody = document.getElementById('auditRankingBody');
+            rankingBody.innerHTML = '';
+            rankingArray.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: bold; color: ${index === 0 ? '#10b981' : 'var(--text-main)'};">${index + 1}º</td>
+                    <td>${item.nome}</td>
+                    <td>${item.votos}</td>
+                `;
+                rankingBody.appendChild(tr);
+            });
+
             renderizarGraficos(pieLabels, pieData, sortedHoras, lineData);
             
         } catch (err) {
