@@ -622,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data: candidatasData, error: candError } = await supabaseClient
                 .from('candidatas')
                 .select('id, nome')
-                .eq('is_aprovada', true);
+                .eq('aprovada', true);
                 
             if (candError) throw candError;
             
