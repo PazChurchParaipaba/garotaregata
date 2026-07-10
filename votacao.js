@@ -21,17 +21,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resultMessage = document.getElementById('resultMessage');
     const closeResultBtn = document.getElementById('closeResultBtn');
 
-    let selectedCandidateId = null;
-    let visitorId = null;
+    let baseId = null;
+    let ipHash = 'unknown';
 
-    // Initialize Fingerprint
+    // 1. Obter o IP do usuário
+    try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        const userIp = ipData.ip;
+        
+        // Misturando com Resolução de Tela e OS para criar uma trava cross-browser
+        const screenData = `${window.screen.width}x${window.screen.height}x${window.screen.colorDepth}`;
+        const osRegex = /(windows|mac os x|android|iphone|ipad|linux)/i;
+        const match = navigator.userAgent.match(osRegex);
+        const os = match ? match[0].toLowerCase() : 'unknown_os';
+        
+        // Criar um hash numérico simples
+        const rawString = `${userIp}_${screenData}_${os}`;
+        let hash = 0;
+        for (let i = 0; i < rawString.length; i++) {
+            hash = ((hash << 5) - hash) + rawString.charCodeAt(i);
+            hash = hash & hash;
+        }
+        ipHash = 'cb_' + Math.abs(hash).toString(16);
+    } catch (e) {
+        console.warn("Não foi possível obter IP para trava estrita.");
+        ipHash = 'fallback_' + Math.random().toString(36).substring(2);
+    }
+
+    // 2. Initialize Fingerprint (Navegador)
     try {
         const fp = await fpPromise;
         const result = await fp.get();
-        visitorId = result.visitorId;
+        baseId = result.visitorId;
 
         // Flexibilização para navegadores in-app (Instagram/Facebook)
-        // O FingerprintJS pode gerar IDs iguais para usuários diferentes nesses navegadores
         const ua = navigator.userAgent || navigator.vendor || window.opera;
         const isInAppBrowser = (ua.indexOf('Instagram') > -1) || (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1);
         
@@ -41,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localId = 'inapp_' + Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('inapp_visitor_id', localId);
             }
-            visitorId = visitorId + '_' + localId;
+            baseId = baseId + '_' + localId;
         }
 
         console.log("Device Fingerprint gerado com sucesso.");
@@ -50,8 +74,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!localStorage.getItem('fallback_visitor_id')) {
             localStorage.setItem('fallback_visitor_id', 'fallback_' + Math.random().toString(36).substring(2));
         }
-        visitorId = localStorage.getItem('fallback_visitor_id');
+        baseId = localStorage.getItem('fallback_visitor_id');
     }
+    
+    // O visitorId final é usado para checagens locais, mas enviaremos as partes para o banco
+    visitorId = baseId;
 
     // ==========================================
     // 🔒 SUPER TRAVA DE NAVEGADOR
@@ -171,9 +198,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadCandidates() {
         try {
             const { data, error } = await supabaseClient
-                .from('candidatas')
+                .from('candidatas_publicas')
                 .select('id, nome, localidade, idade, fotos_urls')
-                .eq('aprovada', true)
                 .order('nome', { ascending: true });
 
             if (error) throw error;
@@ -289,10 +315,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            // Chamando a RPC Segura em vez de fazer o INSERT direto
+            // Chamando a RPC Segura com a dupla verificação (Browser + IP/Hardware)
             const { data, error } = await supabaseClient.rpc('registrar_voto', {
                 c_id: selectedCandidateId,
-                fingerprint: visitorId
+                fingerprint: baseId,
+                ip_hash: ipHash
             });
 
             if (error) {

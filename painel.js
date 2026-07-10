@@ -132,35 +132,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Buscar todas as candidatas (com dados completos)
-            const { data: candidatas, error: candidatasError } = await supabaseClient
-                .from('candidatas')
-                .select('id, nome, cpf, localidade, fotos_urls, idade, contato, autorizacao_url, video_url, mora_paraipaba, aprovada, penalidade_pontos, penalidade_motivo');
+            // Buscar todas as candidatas (com dados completos) via RPC
+            const { data: candidatas, error: candidatasError } = await supabaseClient.rpc('admin_obter_candidatas', {
+                senha: adminPass
+            });
 
             if (candidatasError) throw candidatasError;
 
-            // Buscar todos os votos com paginação (para contornar o limite de 1000 do Supabase)
-            let votos = [];
-            let hasMore = true;
-            let rangeStart = 0;
-            const limit = 1000;
+            // Use secure RPC to get votes instead of querying the table directly
+            const { data: votosData, error: votosError } = await supabaseClient.rpc('admin_obter_votos', {
+                senha: adminPass
+            });
 
-            while (hasMore) {
-                const { data: batch, error: votosError } = await supabaseClient
-                    .from('votos')
-                    .select('candidata_id')
-                    .range(rangeStart, rangeStart + limit - 1);
+            if (votosError) throw votosError;
 
-                if (votosError) throw votosError;
-
-                votos = votos.concat(batch);
-
-                if (batch.length < limit) {
-                    hasMore = false;
-                } else {
-                    rangeStart += limit;
-                }
-            }
+            let votos = votosData || [];
 
             const totalVotos = votos.length;
             totalVotesEl.textContent = totalVotos;
@@ -619,40 +605,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function carregarDadosAuditoria() {
         try {
-            // Pegar todas as candidatas para ter os nomes
-            const { data: candidatasData, error: candError } = await supabaseClient
-                .from('candidatas')
-                .select('id, nome')
-                .eq('aprovada', true);
+            // Pegar todas as candidatas via RPC para ter os nomes
+            const { data: candidatasDataCompleta, error: candError } = await supabaseClient.rpc('admin_obter_candidatas', {
+                senha: adminPass
+            });
                 
             if (candError) throw candError;
+            
+            // Filtrar apenas as aprovadas, como no código original
+            const candidatasData = (candidatasDataCompleta || []).filter(c => c.aprovada);
             
             const candidatasMap = {};
             candidatasData.forEach(c => { candidatasMap[c.id] = c.nome; });
 
-            // Pegar os votos (paginado para passar de 1000 registros)
-            let votosData = [];
-            let hasMoreVotos = true;
-            let rangeStartV = 0;
-            const limitV = 1000;
-
-            while (hasMoreVotos) {
-                const { data: batchV, error: votosError } = await supabaseClient
-                    .from('votos')
-                    .select('created_at, candidata_id, device_fingerprint')
-                    .order('created_at', { ascending: false })
-                    .range(rangeStartV, rangeStartV + limitV - 1);
-                    
-                if (votosError) throw votosError;
-                
-                votosData = votosData.concat(batchV);
-                
-                if (batchV.length < limitV) {
-                    hasMoreVotos = false;
-                } else {
-                    rangeStartV += limitV;
-                }
-            }
+            // Use secure RPC to get votes for auditing instead of querying the table directly
+            const { data: votosData, error: votosError } = await supabaseClient.rpc('admin_obter_votos_auditoria', {
+                senha: adminPass
+            });
+            
+            if (votosError) throw votosError;
+            
+            let votosDataFinal = votosData || [];
             
 
             // Agrupar dados para o gráfico de pizza (Total por candidata)
@@ -662,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Agrupar dados para gráfico de linha (Votos por hora)
             const votosPorHora = {};
 
-            votosData.forEach(v => {
+            votosDataFinal.forEach(v => {
                 const nome = candidatasMap[v.candidata_id] || 'Desconhecida';
                 if (votosPorCandidata[nome] !== undefined) {
                     votosPorCandidata[nome]++;
