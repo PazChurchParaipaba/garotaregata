@@ -139,14 +139,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (candidatasError) throw candidatasError;
 
-            // Use secure RPC to get votes instead of querying the table directly
-            const { data: votosData, error: votosError } = await supabaseClient.rpc('admin_obter_votos', {
-                senha: adminPass
-            });
+            // Pegar os votos (paginado para passar do limite de 1000 registros do Supabase)
+            let votos = [];
+            let hasMore = true;
+            let rangeStart = 0;
+            const limit = 1000;
 
-            if (votosError) throw votosError;
+            while (hasMore) {
+                const { data: batch, error: votosError } = await supabaseClient.rpc('admin_obter_votos', {
+                    senha: adminPass
+                }).range(rangeStart, rangeStart + limit - 1);
 
-            let votos = votosData || [];
+                if (votosError) throw votosError;
+
+                votos = votos.concat(batch || []);
+
+                if (!batch || batch.length < limit) {
+                    hasMore = false;
+                } else {
+                    rangeStart += limit;
+                }
+            }
 
             const totalVotos = votos.length;
             totalVotesEl.textContent = totalVotos;
@@ -618,14 +631,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const candidatasMap = {};
             candidatasData.forEach(c => { candidatasMap[c.id] = c.nome; });
 
-            // Use secure RPC to get votes for auditing instead of querying the table directly
-            const { data: votosData, error: votosError } = await supabaseClient.rpc('admin_obter_votos_auditoria', {
-                senha: adminPass
-            });
-            
-            if (votosError) throw votosError;
-            
-            let votosDataFinal = votosData || [];
+            // Pegar os votos de auditoria (paginado para passar de 1000 registros)
+            let votosDataFinal = [];
+            let hasMoreVotos = true;
+            let rangeStartV = 0;
+            const limitV = 1000;
+
+            while (hasMoreVotos) {
+                const { data: batchV, error: votosError } = await supabaseClient.rpc('admin_obter_votos_auditoria', {
+                    senha: adminPass
+                }).range(rangeStartV, rangeStartV + limitV - 1);
+                
+                if (votosError) throw votosError;
+                
+                votosDataFinal = votosDataFinal.concat(batchV || []);
+                
+                if (!batchV || batchV.length < limitV) {
+                    hasMoreVotos = false;
+                } else {
+                    rangeStartV += limitV;
+                }
+            }
             
 
             // Agrupar dados para o gráfico de pizza (Total por candidata)
