@@ -56,26 +56,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 7. Atualização da função de registro de votos para dupla verificação (Anti Cross-Browser)
-CREATE OR REPLACE FUNCTION registrar_voto(c_id UUID, fingerprint TEXT, ip_hash TEXT)
+-- 7. Atualização da função de registro de votos
+CREATE OR REPLACE FUNCTION registrar_voto(c_id UUID, fingerprint TEXT)
 RETURNS BOOLEAN AS $$
 BEGIN
-    -- Verificar se já votou pelo IP+Hardware (mesmo wifi, mesma resolução e OS)
-    IF EXISTS (SELECT 1 FROM public.votos WHERE device_fingerprint LIKE '%___' || ip_hash) THEN
+    -- Verificar se já votou pela digital do navegador
+    IF EXISTS (SELECT 1 FROM public.votos WHERE device_fingerprint = fingerprint) THEN
         RAISE EXCEPTION 'Voto duplicado. Este aparelho já votou.';
     END IF;
 
-    -- Verificar se já votou pela digital do navegador original
-    IF EXISTS (SELECT 1 FROM public.votos WHERE device_fingerprint LIKE fingerprint || '___%') THEN
-        RAISE EXCEPTION 'Voto duplicado. Este aparelho já votou.';
-    END IF;
-
-    -- Inserir novo formato composto
+    -- Inserir novo formato
     INSERT INTO public.votos (candidata_id, device_fingerprint)
-    VALUES (c_id, fingerprint || '___' || ip_hash);
+    VALUES (c_id, fingerprint);
     
     RETURN TRUE;
 EXCEPTION WHEN unique_violation THEN
     RAISE EXCEPTION 'Voto duplicado. Este aparelho já votou.';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Remover a função antiga (com 3 parâmetros) caso ela exista
+DROP FUNCTION IF EXISTS registrar_voto(UUID, TEXT, TEXT);

@@ -21,70 +21,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resultMessage = document.getElementById('resultMessage');
     const closeResultBtn = document.getElementById('closeResultBtn');
 
-    let baseId = null;
-    let ipHash = 'unknown';
-
-    // 1. Obter o IP do usuário
-    try {
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
-        const userIp = ipData.ip;
-        
-        // Misturando com Resolução de Tela e OS para criar uma trava cross-browser
-        const screenData = `${window.screen.width}x${window.screen.height}x${window.screen.colorDepth}`;
-        const osRegex = /(windows|mac os x|android|iphone|ipad|linux)/i;
-        const match = navigator.userAgent.match(osRegex);
-        const os = match ? match[0].toLowerCase() : 'unknown_os';
-        
-        // Criar um hash numérico simples
-        const rawString = `${userIp}_${screenData}_${os}`;
-        let hash = 0;
-        for (let i = 0; i < rawString.length; i++) {
-            hash = ((hash << 5) - hash) + rawString.charCodeAt(i);
-            hash = hash & hash;
-        }
-        ipHash = 'cb_' + Math.abs(hash).toString(16);
-    } catch (e) {
-        console.warn("Não foi possível obter IP para trava estrita.");
-        ipHash = 'fallback_' + Math.random().toString(36).substring(2);
-    }
-
-    // 2. Initialize Fingerprint (Navegador)
-    try {
-        const fp = await fpPromise;
-        const result = await fp.get();
-        baseId = result.visitorId;
-
-        // Flexibilização para navegadores in-app (Instagram/Facebook)
-        const ua = navigator.userAgent || navigator.vendor || window.opera;
-        const isInAppBrowser = (ua.indexOf('Instagram') > -1) || (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1);
-        
-        if (isInAppBrowser) {
-            let localId = localStorage.getItem('inapp_visitor_id');
-            if (!localId) {
-                localId = 'inapp_' + Math.random().toString(36).substring(2, 15);
-                localStorage.setItem('inapp_visitor_id', localId);
-            }
-            baseId = baseId + '_' + localId;
-        }
-
-        console.log("Device Fingerprint gerado com sucesso.");
-    } catch (e) {
-        console.error("Erro ao gerar fingerprint", e);
-        if (!localStorage.getItem('fallback_visitor_id')) {
-            localStorage.setItem('fallback_visitor_id', 'fallback_' + Math.random().toString(36).substring(2));
-        }
-        baseId = localStorage.getItem('fallback_visitor_id');
-    }
-    
-    // O visitorId final é usado para checagens locais, mas enviaremos as partes para o banco
-    visitorId = baseId;
+    let deviceId = null;
 
     // ==========================================
     // 🔒 SUPER TRAVA DE NAVEGADOR
     // ==========================================
-    const DB_NAME = 'RegataVotosDB_v2';
-    const STORE_NAME = 'votos_v2';
+    const DB_NAME = 'RegataVotosDB_v3';
+    const STORE_NAME = 'votos_v3';
 
     function initIndexedDB() {
         return new Promise((resolve, reject) => {
@@ -100,14 +43,59 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    async function getDeviceId() {
+        let id = localStorage.getItem('device_id_v3');
+        if (id) return id;
+
+        const match = document.cookie.match(new RegExp('(^| )device_id_v3=([^;]+)'));
+        if (match) return match[2];
+
+        try {
+            const db = await initIndexedDB();
+            id = await new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get('device_id');
+                req.onsuccess = () => resolve(req.result ? req.result.value : null);
+                req.onerror = () => resolve(null);
+            });
+            if (id) return id;
+        } catch(e) {}
+
+        return generateUUID();
+    }
+
+    async function saveDeviceId(id) {
+        localStorage.setItem('device_id_v3', id);
+        const d = new Date();
+        d.setTime(d.getTime() + (10*365*24*60*60*1000));
+        document.cookie = "device_id_v3=" + id + ";expires=" + d.toUTCString() + ";path=/";
+        try {
+            const db = await initIndexedDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.put({ id: 'device_id', value: id });
+        } catch(e) {}
+    }
+
+    deviceId = await getDeviceId();
+    await saveDeviceId(deviceId);
+
     async function setSuperCookieVoto() {
         // 1. LocalStorage
-        localStorage.setItem('voted_garota_regata_v2', 'true');
+        localStorage.setItem('voted_garota_regata_v3', 'true');
         
         // 2. Cookie (10 anos)
         const d = new Date();
         d.setTime(d.getTime() + (10*365*24*60*60*1000));
-        document.cookie = "voted_garota_regata_v2=true;expires=" + d.toUTCString() + ";path=/";
+        document.cookie = "voted_garota_regata_v3=true;expires=" + d.toUTCString() + ";path=/";
 
         // 3. IndexedDB
         try {
@@ -121,13 +109,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function checkSuperCookieVoto() {
-        // 1. LocalStorage
+        // 1. LocalStorage V3 e V2
+        if (localStorage.getItem('voted_garota_regata_v3') === 'true') return true;
         if (localStorage.getItem('voted_garota_regata_v2') === 'true') return true;
         
-        // 2. Cookie
+        // 2. Cookie V3 e V2
+        if (document.cookie.indexOf('voted_garota_regata_v3=true') !== -1) return true;
         if (document.cookie.indexOf('voted_garota_regata_v2=true') !== -1) return true;
 
-        // 3. IndexedDB
+        // 3. IndexedDB V3
         try {
             const db = await initIndexedDB();
             return new Promise((resolve) => {
@@ -148,15 +138,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ==========================================
     // 🔍 CONSULTA AO BANCO PARA REVALIDAR TRAVA
     // ==========================================
-    if (visitorId) {
+    if (deviceId) {
         try {
             const { data: voteData } = await supabaseClient
                 .from('votos')
                 .select('id')
-                .eq('device_fingerprint', visitorId)
+                .eq('device_fingerprint', deviceId)
                 .maybeSingle();
             
-            // Se encontrou no banco, significa que ele votou. Reativamos a trava V2!
+            // Se encontrou no banco, significa que ele votou. Reativamos a trava V3!
             if (voteData) {
                 setSuperCookieVoto();
             }
@@ -289,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     confirmVoteBtn.addEventListener('click', async () => {
-        if (!selectedCandidateId || !visitorId) return;
+        if (!selectedCandidateId || !deviceId) return;
 
         confirmVoteBtn.textContent = 'Processando...';
         confirmVoteBtn.disabled = true;
@@ -315,11 +305,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            // Chamando a RPC Segura com a dupla verificação (Browser + IP/Hardware)
+            // Chamando a RPC Segura
             const { data, error } = await supabaseClient.rpc('registrar_voto', {
                 c_id: selectedCandidateId,
-                fingerprint: baseId,
-                ip_hash: ipHash
+                fingerprint: deviceId
             });
 
             if (error) {
